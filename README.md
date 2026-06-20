@@ -67,7 +67,7 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_stash` | `0` | set to `1` to show the stash count |
 | `@git_revamped_ahead_behind` | `0` | set to `1` to show commits ahead and behind |
 | `@git_revamped_last_commit` | `0` | set to `1` to show the last-commit age |
-| `@git_revamped_web` | `0` | set to `1` to show provider PR, review, and issue counts |
+| `@git_revamped_web` | `0` | set to `1` to show provider counts: PR, review, and issue on GitHub and GitLab, plus a bug count on GitHub |
 | `@git_revamped_branch_{color,icon}` | empty | branch styling |
 | `@git_revamped_changed_{color,icon}` | yellow, `~` | modified-file styling |
 | `@git_revamped_insertions_{color,icon}` | green, `+` | inserted-lines styling |
@@ -77,12 +77,14 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_ahead_{color,icon}` | green, `^` | ahead styling |
 | `@git_revamped_behind_{color,icon}` | yellow, `v` | behind styling |
 | `@git_revamped_commit_{color,icon}` | blue, `@` | last-commit styling |
-| `@git_revamped_{pr,review,issue}_{color,icon}` | see defaults | provider segment styling |
+| `@git_revamped_{pr,review,issue,bug}_{color,icon}` | see defaults | provider segment styling |
 
 > [!IMPORTANT]
 > The `@git_revamped_web` segment calls the GitHub or GitLab API on every refresh
 > and needs `gh` plus `jq`, or `glab`, installed and authenticated. It is off by
 > default. Leave it off unless you accept the API calls and their rate limits.
+> On GitHub, issues labeled `bug` count toward the bug segment and are excluded
+> from the issue segment, so the two never double-count the same issue.
 
 ## Support by platform and architecture
 

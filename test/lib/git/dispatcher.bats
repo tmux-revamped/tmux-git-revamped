@@ -64,10 +64,25 @@ teardown() {
   _gh_pr_count() { echo "2"; }
   _gh_review_count() { echo "1"; }
   _gh_issue_count() { echo "4"; }
+  _gh_bug_count() { echo "1"; }
   run git_build_status /repo
   [[ "${output}" == *"#[fg=cyan]PR 2#[default]"* ]]
   [[ "${output}" == *"#[fg=magenta]R 1#[default]"* ]]
-  [[ "${output}" == *"#[fg=blue]I 4#[default]"* ]]
+  [[ "${output}" == *"#[fg=blue]I 3#[default]"* ]]
+  [[ "${output}" == *"#[fg=red]B 1#[default]"* ]]
+}
+
+@test "git.sh dispatcher - github issue count never goes negative" {
+  set_tmux_option "@git_revamped_web" "1"
+  _git_remote_url() { echo "https://github.com/o/r"; }
+  has_command() { [[ "$1" == "gh" ]]; }
+  _gh_pr_count() { echo "0"; }
+  _gh_review_count() { echo "0"; }
+  _gh_issue_count() { echo "1"; }
+  _gh_bug_count() { echo "3"; }
+  run git_web_segment /repo
+  [[ "${output}" == *"#[fg=blue]I 0#[default]"* ]]
+  [[ "${output}" == *"#[fg=red]B 3#[default]"* ]]
 }
 
 @test "git.sh dispatcher - web segment is empty for an unknown provider" {
@@ -80,8 +95,13 @@ teardown() {
   _git_remote_url() { echo "git@gitlab.com:o/r.git"; }
   has_command() { [[ "$1" == "glab" ]]; }
   _glab_mr_count() { echo "5"; }
+  _glab_review_count() { echo "2"; }
+  _glab_issue_count() { echo "3"; }
   run git_web_segment /repo
   [[ "${output}" == *"#[fg=cyan]PR 5#[default]"* ]]
+  [[ "${output}" == *"#[fg=magenta]R 2#[default]"* ]]
+  [[ "${output}" == *"#[fg=blue]I 3#[default]"* ]]
+  [[ "${output}" == *"#[fg=red]B 0#[default]"* ]]
 }
 
 @test "git.sh dispatcher - status defaults to the working directory" {
