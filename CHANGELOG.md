@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-06-20
+
+### Added
+
+- GitHub bug count in the web segment. Issues assigned to you and labeled `bug`
+  render as a separate red `B` segment and are excluded from the issue count, so
+  the two never double-count the same issue.
+
+### Fixed
+
+- GitLab review and issue counts in the web segment, previously hardcoded to
+  zero, now report assigned merge requests under review and open issues.
+
 ## [1.0.0] - 2026-06-20
 
 ### Added

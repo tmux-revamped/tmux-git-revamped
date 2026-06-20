@@ -77,6 +77,9 @@ teardown() {
   run _gh_pr_count
   run _gh_review_count
   run _gh_issue_count
+  run _gh_bug_count
   run _glab_mr_count
+  run _glab_review_count
+  run _glab_issue_count
   true
 }

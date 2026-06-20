@@ -87,7 +87,12 @@ _git_now() { date +%s 2>/dev/null || echo 0; }
 _gh_pr_count() { gh pr list --json number --jq 'length' 2>/dev/null | head -1 | tr -d '\n '; }
 _gh_review_count() { gh pr status --json reviewRequests --jq '.needsReview | length' 2>/dev/null | head -1 | tr -d '\n '; }
 _gh_issue_count() { gh issue list --assignee @me --json number --jq 'length' 2>/dev/null | head -1 | tr -d '\n '; }
+_gh_bug_count() { gh issue list --assignee @me --json labels --jq '[.[] | select(any(.labels[].name; . == "bug"))] | length' 2>/dev/null | head -1 | tr -d '\n '; }
 _glab_mr_count() { glab mr list 2>/dev/null | grep -cE '^!'; }
+# shellcheck disable=SC2120
+_glab_review_count() { glab mr list --reviewer=@me 2>/dev/null | grep -cE '^!'; return 0; }
+# shellcheck disable=SC2120
+_glab_issue_count() { glab issue list 2>/dev/null | grep -cE '^#'; return 0; }
 
 # is_git_repo DIR -> 0 when DIR is inside a git work tree.
 is_git_repo() { _git_in_repo "${1}"; }
@@ -112,5 +117,8 @@ export -f _git_now
 export -f _gh_pr_count
 export -f _gh_review_count
 export -f _gh_issue_count
+export -f _gh_bug_count
 export -f _glab_mr_count
+export -f _glab_review_count
+export -f _glab_issue_count
 export -f is_git_repo
