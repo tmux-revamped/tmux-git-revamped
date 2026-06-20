@@ -45,3 +45,28 @@ teardown() {
   set_tmux_option "@git_revamped_branch_color" "#[fg=blue]"
   [[ "$(git_render_branch main)" == "#[fg=blue]B main#[default]" ]]
 }
+
+@test "render.sh - git_render_count passes a named color through verbatim" {
+  set_tmux_option "@git_revamped_deletions_color" "#[fg=red]"
+  [[ "$(git_render_count deletions 3)" == *"#[fg=red]"* ]]
+}
+
+@test "render.sh - git_render_count passes a 256 colour spec through verbatim" {
+  set_tmux_option "@git_revamped_deletions_color" "#[fg=colour203]"
+  [[ "$(git_render_count deletions 3)" == *"#[fg=colour203]"* ]]
+}
+
+@test "render.sh - git_render_count passes a hex color through verbatim" {
+  set_tmux_option "@git_revamped_deletions_color" "#[fg=#f38ba8]"
+  [[ "$(git_render_count deletions 3)" == *"#[fg=#f38ba8]"* ]]
+}
+
+@test "render.sh - git_render_count passes a hex fg and bg pair through verbatim" {
+  set_tmux_option "@git_revamped_deletions_color" "#[fg=#f38ba8,bg=#1e1e2e]"
+  [[ "$(git_render_count deletions 3)" == *"#[fg=#f38ba8,bg=#1e1e2e]"* ]]
+}
+
+@test "render.sh - git_render_count passes a bright named color through verbatim" {
+  set_tmux_option "@git_revamped_deletions_color" "#[fg=brightred]"
+  [[ "$(git_render_count deletions 3)" == *"#[fg=brightred]"* ]]
+}

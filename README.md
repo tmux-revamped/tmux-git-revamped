@@ -86,6 +86,114 @@ you can replace with Nerd Font glyphs.
 > On GitHub, issues labeled `bug` count toward the bug segment and are excluded
 > from the issue segment, so the two never double-count the same issue.
 
+## Theme color suggestions
+
+The defaults use the 16 ANSI color names, which the active terminal theme remaps,
+so the segments match any theme out of the box. For exact hex values, copy one
+block below into `~/.tmux.conf`.
+
+### Catppuccin Mocha
+
+```tmux
+set -g @git_revamped_insertions_color '#[fg=#a6e3a1]'
+set -g @git_revamped_ahead_color '#[fg=#a6e3a1]'
+set -g @git_revamped_changed_color '#[fg=#f9e2af]'
+set -g @git_revamped_behind_color '#[fg=#f9e2af]'
+set -g @git_revamped_deletions_color '#[fg=#f38ba8]'
+set -g @git_revamped_bug_color '#[fg=#f38ba8]'
+set -g @git_revamped_untracked_color '#[fg=#89b4fa]'
+set -g @git_revamped_commit_color '#[fg=#89b4fa]'
+set -g @git_revamped_issue_color '#[fg=#89b4fa]'
+set -g @git_revamped_pr_color '#[fg=#94e2d5]'
+set -g @git_revamped_stash_color '#[fg=#cba6f7]'
+set -g @git_revamped_review_color '#[fg=#cba6f7]'
+```
+
+### Dracula
+
+```tmux
+set -g @git_revamped_insertions_color '#[fg=#50fa7b]'
+set -g @git_revamped_ahead_color '#[fg=#50fa7b]'
+set -g @git_revamped_changed_color '#[fg=#f1fa8c]'
+set -g @git_revamped_behind_color '#[fg=#f1fa8c]'
+set -g @git_revamped_deletions_color '#[fg=#ff5555]'
+set -g @git_revamped_bug_color '#[fg=#ff5555]'
+set -g @git_revamped_untracked_color '#[fg=#bd93f9]'
+set -g @git_revamped_commit_color '#[fg=#bd93f9]'
+set -g @git_revamped_issue_color '#[fg=#bd93f9]'
+set -g @git_revamped_pr_color '#[fg=#8be9fd]'
+set -g @git_revamped_stash_color '#[fg=#ff79c6]'
+set -g @git_revamped_review_color '#[fg=#ff79c6]'
+```
+
+### Nord
+
+```tmux
+set -g @git_revamped_insertions_color '#[fg=#a3be8c]'
+set -g @git_revamped_ahead_color '#[fg=#a3be8c]'
+set -g @git_revamped_changed_color '#[fg=#ebcb8b]'
+set -g @git_revamped_behind_color '#[fg=#ebcb8b]'
+set -g @git_revamped_deletions_color '#[fg=#bf616a]'
+set -g @git_revamped_bug_color '#[fg=#bf616a]'
+set -g @git_revamped_untracked_color '#[fg=#81a1c1]'
+set -g @git_revamped_commit_color '#[fg=#81a1c1]'
+set -g @git_revamped_issue_color '#[fg=#81a1c1]'
+set -g @git_revamped_pr_color '#[fg=#88c0d0]'
+set -g @git_revamped_stash_color '#[fg=#b48ead]'
+set -g @git_revamped_review_color '#[fg=#b48ead]'
+```
+
+### Gruvbox Dark
+
+```tmux
+set -g @git_revamped_insertions_color '#[fg=#b8bb26]'
+set -g @git_revamped_ahead_color '#[fg=#b8bb26]'
+set -g @git_revamped_changed_color '#[fg=#fabd2f]'
+set -g @git_revamped_behind_color '#[fg=#fabd2f]'
+set -g @git_revamped_deletions_color '#[fg=#fb4934]'
+set -g @git_revamped_bug_color '#[fg=#fb4934]'
+set -g @git_revamped_untracked_color '#[fg=#83a598]'
+set -g @git_revamped_commit_color '#[fg=#83a598]'
+set -g @git_revamped_issue_color '#[fg=#83a598]'
+set -g @git_revamped_pr_color '#[fg=#8ec07c]'
+set -g @git_revamped_stash_color '#[fg=#d3869b]'
+set -g @git_revamped_review_color '#[fg=#d3869b]'
+```
+
+### Tokyo Night
+
+```tmux
+set -g @git_revamped_insertions_color '#[fg=#9ece6a]'
+set -g @git_revamped_ahead_color '#[fg=#9ece6a]'
+set -g @git_revamped_changed_color '#[fg=#e0af68]'
+set -g @git_revamped_behind_color '#[fg=#e0af68]'
+set -g @git_revamped_deletions_color '#[fg=#f7768e]'
+set -g @git_revamped_bug_color '#[fg=#f7768e]'
+set -g @git_revamped_untracked_color '#[fg=#7aa2f7]'
+set -g @git_revamped_commit_color '#[fg=#7aa2f7]'
+set -g @git_revamped_issue_color '#[fg=#7aa2f7]'
+set -g @git_revamped_pr_color '#[fg=#7dcfff]'
+set -g @git_revamped_stash_color '#[fg=#bb9af7]'
+set -g @git_revamped_review_color '#[fg=#bb9af7]'
+```
+
+### Solarized Dark
+
+```tmux
+set -g @git_revamped_insertions_color '#[fg=#859900]'
+set -g @git_revamped_ahead_color '#[fg=#859900]'
+set -g @git_revamped_changed_color '#[fg=#b58900]'
+set -g @git_revamped_behind_color '#[fg=#b58900]'
+set -g @git_revamped_deletions_color '#[fg=#dc322f]'
+set -g @git_revamped_bug_color '#[fg=#dc322f]'
+set -g @git_revamped_untracked_color '#[fg=#268bd2]'
+set -g @git_revamped_commit_color '#[fg=#268bd2]'
+set -g @git_revamped_issue_color '#[fg=#268bd2]'
+set -g @git_revamped_pr_color '#[fg=#2aa198]'
+set -g @git_revamped_stash_color '#[fg=#d33682]'
+set -g @git_revamped_review_color '#[fg=#d33682]'
+```
+
 ## Support by platform and architecture
 
 Works on every supported platform and architecture with built-in tools. The status
