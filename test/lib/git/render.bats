@@ -16,6 +16,9 @@ teardown() {
   [[ "$(_git_default_color changed)" == "#[fg=yellow]" ]]
   [[ "$(_git_default_color insertions)" == "#[fg=green]" ]]
   [[ "$(_git_default_color deletions)" == "#[fg=red]" ]]
+  [[ "$(_git_default_color staged)" == "#[fg=green]" ]]
+  [[ "$(_git_default_color conflict)" == "#[fg=red]" ]]
+  [[ "$(_git_default_color state)" == "#[fg=yellow]" ]]
   [[ "$(_git_default_color pr)" == "#[fg=cyan]" ]]
   [[ -z "$(_git_default_color other)" ]]
 }
@@ -24,8 +27,15 @@ teardown() {
   [[ "$(_git_default_icon insertions)" == "+" ]]
   [[ "$(_git_default_icon deletions)" == "-" ]]
   [[ "$(_git_default_icon untracked)" == "?" ]]
+  [[ "$(_git_default_icon staged)" == "S" ]]
+  [[ "$(_git_default_icon conflict)" == "!" ]]
+  [[ -z "$(_git_default_icon state)" ]]
   [[ "$(_git_default_icon pr)" == "PR" ]]
   [[ -z "$(_git_default_icon other)" ]]
+}
+
+@test "render.sh - git_render_count renders the state label without an icon" {
+  [[ "$(git_render_count state rebase)" == "#[fg=yellow]rebase#[default]" ]]
 }
 
 @test "render.sh - git_render_count uses defaults then options" {

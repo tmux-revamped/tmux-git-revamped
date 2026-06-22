@@ -19,6 +19,9 @@ _git_default_color() {
     insertions) echo "#[fg=green]" ;;
     deletions)  echo "#[fg=red]" ;;
     untracked)  echo "#[fg=blue]" ;;
+    staged)     echo "#[fg=green]" ;;
+    conflict)   echo "#[fg=red]" ;;
+    state)      echo "#[fg=yellow]" ;;
     stash)      echo "#[fg=magenta]" ;;
     ahead)      echo "#[fg=green]" ;;
     behind)     echo "#[fg=yellow]" ;;
@@ -37,6 +40,9 @@ _git_default_icon() {
     insertions) echo "+" ;;
     deletions)  echo "-" ;;
     untracked)  echo "?" ;;
+    staged)     echo "S" ;;
+    conflict)   echo "!" ;;
+    state)      echo "" ;;
     stash)      echo "$" ;;
     ahead)      echo "^" ;;
     behind)     echo "v" ;;
