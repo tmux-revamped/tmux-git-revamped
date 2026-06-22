@@ -69,6 +69,8 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_state` | `1` | set to `0` to hide the in-progress operation label (rebase, merge, cherry-pick, revert, bisect, am) |
 | `@git_revamped_stash` | `0` | set to `1` to show the stash count |
 | `@git_revamped_ahead_behind` | `0` | set to `1` to show commits ahead and behind |
+| `@git_revamped_autofetch` | `0` | set to `1` to fetch in the background so ahead/behind stays current; no crontab or shell-rc edits |
+| `@git_revamped_autofetch_interval` | `5` | minutes between background fetches |
 | `@git_revamped_last_commit` | `0` | set to `1` to show the last-commit age |
 | `@git_revamped_web` | `0` | set to `1` to show provider counts: PR, review, and issue on GitHub and GitLab, plus a bug count on GitHub |
 | `@git_revamped_branch_{color,icon}` | empty | branch styling |

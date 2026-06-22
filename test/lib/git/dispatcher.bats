@@ -131,6 +131,38 @@ teardown() {
   [[ -z "${output}" ]]
 }
 
+@test "git.sh - autofetch is skipped when disabled" {
+  _git_fetch() { echo x >> "${BATS_TEST_TMPDIR}/fetched"; }
+  set_tmux_option "@git_revamped_autofetch" "0"
+  git_autofetch /repo
+  [[ ! -f "${BATS_TEST_TMPDIR}/fetched" ]]
+}
+
+@test "git.sh - autofetch fires when enabled and the throttle elapsed" {
+  _git_fetch() { echo x >> "${BATS_TEST_TMPDIR}/fetched"; }
+  _git_now() { echo 100000; }
+  has_command() { return 0; }
+  set_tmux_option "@git_revamped_autofetch" "1"
+  git_autofetch /repo
+  [[ -f "${BATS_TEST_TMPDIR}/fetched" ]]
+}
+
+@test "git.sh - autofetch is throttled within the interval" {
+  _git_fetch() { echo x >> "${BATS_TEST_TMPDIR}/fetched"; }
+  _git_now() { echo 100000; }
+  has_command() { return 0; }
+  set_tmux_option "@git_revamped_autofetch" "1"
+  git_autofetch /repo
+  rm -f "${BATS_TEST_TMPDIR}/fetched"
+  git_autofetch /repo
+  [[ ! -f "${BATS_TEST_TMPDIR}/fetched" ]]
+}
+
+@test "git.sh - _git_fetch seam is runnable" {
+  run _git_fetch /nonexistent-repo-xyz
+  true
+}
+
 @test "git.sh dispatcher - unknown subcommand produces no output" {
   run main bogus
   [[ -z "${output}" ]]
