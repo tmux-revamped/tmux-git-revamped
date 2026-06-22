@@ -64,6 +64,9 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_interval` | `5` | seconds a cached status stays fresh |
 | `@git_revamped_max_branch` | `25` | branch length before it is shortened |
 | `@git_revamped_untracked` | `1` | set to `0` to hide the untracked count |
+| `@git_revamped_staged` | `0` | set to `1` to show the staged (indexed) count |
+| `@git_revamped_conflict` | `1` | set to `0` to hide the conflict count |
+| `@git_revamped_state` | `1` | set to `0` to hide the in-progress operation label (rebase, merge, cherry-pick, revert, bisect, am) |
 | `@git_revamped_stash` | `0` | set to `1` to show the stash count |
 | `@git_revamped_ahead_behind` | `0` | set to `1` to show commits ahead and behind |
 | `@git_revamped_last_commit` | `0` | set to `1` to show the last-commit age |
@@ -73,6 +76,9 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_insertions_{color,icon}` | green, `+` | inserted-lines styling |
 | `@git_revamped_deletions_{color,icon}` | red, `-` | deleted-lines styling |
 | `@git_revamped_untracked_{color,icon}` | blue, `?` | untracked-file styling |
+| `@git_revamped_staged_{color,icon}` | green, `S` | staged-file styling |
+| `@git_revamped_conflict_{color,icon}` | red, `!` | conflict styling |
+| `@git_revamped_state_{color,icon}` | yellow, none | in-progress operation label styling |
 | `@git_revamped_stash_{color,icon}` | magenta, `$` | stash styling |
 | `@git_revamped_ahead_{color,icon}` | green, `^` | ahead styling |
 | `@git_revamped_behind_{color,icon}` | yellow, `v` | behind styling |

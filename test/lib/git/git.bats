@@ -35,6 +35,32 @@ teardown() {
   [[ "$(count_untracked "${txt}")" == "2" ]]
 }
 
+@test "git.sh - count_staged counts only index changes, not unstaged or conflicts" {
+  local txt=$'## main\nM  a\n M b\nMM c\nA  d\nUU e\n?? f'
+  [[ "$(count_staged "${txt}")" == "3" ]]
+}
+
+@test "git.sh - count_conflict counts unmerged paths" {
+  local txt=$'## main\nUU a\nAA b\nM  c\n M d'
+  [[ "$(count_conflict "${txt}")" == "2" ]]
+  [[ "$(count_conflict $'## main\nM  a')" == "0" ]]
+}
+
+@test "git.sh - git_special_state detects in-progress operations" {
+  local d
+  d="$(mktemp -d)"
+  [[ -z "$(git_special_state "${d}")" ]]
+  touch "${d}/MERGE_HEAD"
+  [[ "$(git_special_state "${d}")" == "merge" ]]
+  rm -f "${d}/MERGE_HEAD"
+  mkdir -p "${d}/rebase-merge"
+  [[ "$(git_special_state "${d}")" == "rebase" ]]
+  rm -rf "${d}/rebase-merge"
+  touch "${d}/CHERRY_PICK_HEAD"
+  [[ "$(git_special_state "${d}")" == "cherry-pick" ]]
+  rm -rf "${d}"
+}
+
 @test "git.sh - parse_diffstat sums numstat" {
   local txt=$'3\t1\tsrc/a\n2\t0\tsrc/b'
   [[ "$(parse_diffstat "${txt}")" == "2 5 1" ]]

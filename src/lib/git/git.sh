@@ -36,6 +36,34 @@ count_untracked() {
   printf '%s\n' "${1}" | grep -c '^??'
 }
 
+# count_staged TEXT -> files staged in the index (porcelain column 1 set), from
+# porcelain body lines. Excludes untracked and unmerged entries.
+count_staged() {
+  printf '%s\n' "${1}" | awk '/^##/{next} /^\?\?/{next} {x=substr($0,1,1); y=substr($0,2,1); if (x=="U"||y=="U"||(x=="D"&&y=="D")||(x=="A"&&y=="A")) next; if (index("MADRC",x)>0) s++} END {print s+0}'
+}
+
+# count_conflict TEXT -> unmerged (conflicted) files, from porcelain body lines.
+# Unmerged is any entry with a U in either column, or the DD/AA pairs.
+count_conflict() {
+  printf '%s\n' "${1}" | awk '/^##/{next} /^\?\?/{next} {x=substr($0,1,1); y=substr($0,2,1); if (x=="U"||y=="U"||(x=="D"&&y=="D")||(x=="A"&&y=="A")) c++} END {print c+0}'
+}
+
+# git_special_state GITDIR -> the in-progress operation: rebase, am, merge,
+# cherry-pick, revert, or bisect; empty when the worktree is in a normal state.
+git_special_state() {
+  local d="${1}"
+  if [[ -d "${d}/rebase-merge" ]]; then echo "rebase"; return 0; fi
+  if [[ -d "${d}/rebase-apply" ]]; then
+    [[ -f "${d}/rebase-apply/applying" ]] && echo "am" || echo "rebase"
+    return 0
+  fi
+  [[ -f "${d}/MERGE_HEAD" ]] && { echo "merge"; return 0; }
+  [[ -f "${d}/CHERRY_PICK_HEAD" ]] && { echo "cherry-pick"; return 0; }
+  [[ -f "${d}/REVERT_HEAD" ]] && { echo "revert"; return 0; }
+  [[ -f "${d}/BISECT_LOG" ]] && { echo "bisect"; return 0; }
+  echo ""
+}
+
 # parse_diffstat TEXT -> "<changed> <insertions> <deletions>" from numstat.
 parse_diffstat() {
   printf '%s\n' "${1}" | awk -F'\t' '{ c++; if ($1 ~ /^[0-9]+$/) i+=$1; if ($2 ~ /^[0-9]+$/) d+=$2 } END { print c+0, i+0, d+0 }'
@@ -79,6 +107,7 @@ provider_from_url() {
 _git_in_repo() { git -C "${1}" --no-optional-locks rev-parse --git-dir >/dev/null 2>&1; }
 _git_branch() { git -C "${1}" --no-optional-locks rev-parse --abbrev-ref HEAD 2>/dev/null; }
 _git_status() { git -C "${1}" --no-optional-locks status -b --porcelain 2>/dev/null; }
+_git_dir() { git -C "${1}" --no-optional-locks rev-parse --absolute-git-dir 2>/dev/null; }
 _git_numstat() { git -C "${1}" --no-optional-locks diff --numstat 2>/dev/null; }
 _git_stash_count() { git -C "${1}" --no-optional-locks stash list 2>/dev/null | wc -l | tr -d ' '; }
 _git_last_commit_ts() { git -C "${1}" --no-optional-locks log -1 --format=%ct 2>/dev/null; }
@@ -102,6 +131,10 @@ export -f parse_ahead
 export -f parse_behind
 export -f count_modified
 export -f count_untracked
+export -f count_staged
+export -f count_conflict
+export -f git_special_state
+export -f _git_dir
 export -f parse_diffstat
 export -f truncate_branch
 export -f relative_time

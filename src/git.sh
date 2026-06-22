@@ -83,6 +83,16 @@ git_build_status() {
     (( untracked > 0 )) && out="${out} $(git_render_count untracked "${untracked}")"
   fi
 
+  if [[ "$(get_tmux_option "@git_revamped_staged" "0")" == "1" ]]; then
+    local staged; staged="$(count_staged "${status}")"
+    (( staged > 0 )) && out="${out} $(git_render_count staged "${staged}")"
+  fi
+
+  if [[ "$(get_tmux_option "@git_revamped_conflict" "1")" == "1" ]]; then
+    local conflict; conflict="$(count_conflict "${status}")"
+    (( conflict > 0 )) && out="${out} $(git_render_count conflict "${conflict}")"
+  fi
+
   if [[ "$(get_tmux_option "@git_revamped_stash" "0")" == "1" ]]; then
     local stash; stash="$(_git_stash_count "${dir}")"
     [[ "${stash}" =~ ^[0-9]+$ ]] && (( stash > 0 )) && out="${out} $(git_render_count stash "${stash}")"
@@ -93,6 +103,11 @@ git_build_status() {
     ahead="$(parse_ahead "${header}")"; behind="$(parse_behind "${header}")"
     (( ahead > 0 )) && out="${out} $(git_render_count ahead "${ahead}")"
     (( behind > 0 )) && out="${out} $(git_render_count behind "${behind}")"
+  fi
+
+  if [[ "$(get_tmux_option "@git_revamped_state" "1")" == "1" ]]; then
+    local state; state="$(git_special_state "$(_git_dir "${dir}")")"
+    [[ -n "${state}" ]] && out="${out} $(git_render_count state "${state}")"
   fi
 
   if [[ "$(get_tmux_option "@git_revamped_last_commit" "0")" == "1" ]]; then
