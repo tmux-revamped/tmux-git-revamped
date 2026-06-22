@@ -123,7 +123,33 @@ git_build_status() {
   echo "${out}"
 }
 
+# _git_fetch DIR -> a detached background fetch. Seam; tests override it.
+_git_fetch() {
+  ( git -C "${1}" --no-optional-locks fetch --quiet >/dev/null 2>&1 ) &
+  disown 2>/dev/null || true
+}
+
+# git_autofetch DIR -> when @git_revamped_autofetch is on, fire a throttled,
+# detached fetch so ahead/behind stays current without ever blocking the render.
+# The last-fetch time is kept per repo in a server option, no crontab, no rc edit.
+git_autofetch() {
+  local dir="${1}"
+  [[ "$(get_tmux_option "@git_revamped_autofetch" "0")" == "1" ]] || return 0
+  has_command git || return 0
+  local key now last interval
+  key="fetch_$(_git_key "${dir}")"
+  now="$(_git_now)"
+  last="$(cache_get "${key}")"
+  [[ "${last}" =~ ^[0-9]+$ ]] || last=0
+  interval="$(get_tmux_option "@git_revamped_autofetch_interval" "5")"
+  [[ "${interval}" =~ ^[0-9]+$ ]] || interval=5
+  (( now - last < interval * 60 )) && return 0
+  cache_set "${key}" "${now}"
+  _git_fetch "${dir}"
+}
+
 git_refresh() {
+  git_autofetch "${1}"
   cache_set "${2}" "$(git_build_status "${1}")"
 }
 
