@@ -4,7 +4,7 @@
 
 **Git repository status in your tmux status bar, without ever blocking the render.**
 
-[![Tests](https://github.com/gufranco/tmux-git-revamped/actions/workflows/tests.yml/badge.svg)](https://github.com/gufranco/tmux-git-revamped/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)](CHANGELOG.md)
+[![Tests](https://github.com/tmux-revamped/tmux-git-revamped/actions/workflows/tests.yml/badge.svg)](https://github.com/tmux-revamped/tmux-git-revamped/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)](CHANGELOG.md)
 
 </div>
 
@@ -12,7 +12,7 @@
 
 The active pane's repository at a glance: branch, changed files, inserted and deleted lines, and untracked files, with optional stash, ahead and behind counts, last-commit age, and provider pull-request and issue counts. The full status can run slow work, so it is cached per directory and refreshed by a detached worker. The status line reads the cached value and returns instantly. No temp files are touched.
 
-Built from [tmux-plugin-template](https://github.com/gufranco/tmux-plugin-template).
+Built from [tmux-plugin-template](https://github.com/tmux-revamped/tmux-plugin-template).
 
 <table>
 <tr>
@@ -41,7 +41,7 @@ Both resolve against the active pane's path and render nothing outside a reposit
 With [TPM](https://github.com/tmux-plugins/tpm), add to `~/.tmux.conf`:
 
 ```tmux
-set -g @plugin 'gufranco/tmux-git-revamped'
+set -g @plugin 'tmux-revamped/tmux-git-revamped'
 set -g status-right '#{git}'
 ```
 
@@ -50,7 +50,7 @@ Then press `prefix + I` to install.
 Manual install:
 
 ```bash
-git clone https://github.com/gufranco/tmux-git-revamped ~/.tmux/plugins/tmux-git-revamped
+git clone https://github.com/tmux-revamped/tmux-git-revamped ~/.tmux/plugins/tmux-git-revamped
 run-shell ~/.tmux/plugins/tmux-git-revamped/git-revamped.tmux
 ```
 

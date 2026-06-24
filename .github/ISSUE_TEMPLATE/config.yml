@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: README
-    url: https://github.com/gufranco/tmux-git-revamped#readme
+    url: https://github.com/tmux-revamped/tmux-git-revamped#readme
     about: Check the documentation before opening an issue
