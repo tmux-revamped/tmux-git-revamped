@@ -14,7 +14,7 @@ jobs:
         os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
 
       - name: Install dependencies (Ubuntu)
         if: runner.os == 'Linux'
@@ -32,7 +32,7 @@ jobs:
   test-macos-gnu:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
 
       - name: Install tmux, bats, and GNU tools
         run: brew install bats-core tmux coreutils gawk gnu-sed grep
@@ -51,7 +51,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
 
       - name: Install shellcheck
         run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
@@ -62,7 +62,7 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
 
       - name: Install test dependencies
         run: |
@@ -84,7 +84,7 @@ jobs:
   version:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
 
       - name: Check version consistency
         run: |
@@ -107,15 +107,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Determine version
         id: version
@@ -142,10 +137,8 @@ jobs:
         run: |
           ver="${{ steps.version.outputs.current_ver }}"
           repo="${GITHUB_REPOSITORY##*/}"
-          git tag -a "v${ver}" -m "v${ver}"
-          git push origin "v${ver}"
           mkdir -p /tmp/release-staging
           cp -r src README.md CHANGELOG.md LICENSE /tmp/release-staging/
           cp ./*.tmux /tmp/release-staging/ 2>/dev/null || true
           tar czf "${repo}-${ver}.tar.gz" -C /tmp/release-staging .
-          gh release create "v${ver}" --title "v${ver}" --notes-file /tmp/release-notes.md "${repo}-${ver}.tar.gz"
+          gh release create "v${ver}" --target "${GITHUB_SHA}" --title "v${ver}" --notes-file /tmp/release-notes.md "${repo}-${ver}.tar.gz"
