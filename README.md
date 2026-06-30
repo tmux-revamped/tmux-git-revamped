@@ -4,11 +4,11 @@
 
 **Git repository status in your tmux status bar, without ever blocking the render.**
 
-[![Tests](https://github.com/tmux-revamped/tmux-git-revamped/actions/workflows/tests.yml/badge.svg)](https://github.com/tmux-revamped/tmux-git-revamped/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)](CHANGELOG.md)
+[![Tests](https://github.com/tmux-revamped/tmux-git-revamped/actions/workflows/tests.yml/badge.svg)](https://github.com/tmux-revamped/tmux-git-revamped/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](CHANGELOG.md)
 
 </div>
 
-**2** placeholders · **2** platforms · **77** tests · **95%+** coverage
+**2** placeholders · **2** platforms · **158** tests · **95%+** coverage
 
 The active pane's repository at a glance: branch, changed files, inserted and deleted lines, and untracked files, with optional stash, ahead and behind counts, last-commit age, and provider pull-request and issue counts. The full status can run slow work, so it is cached per directory and refreshed by a detached worker. The status line reads the cached value and returns instantly. No temp files are touched.
 
@@ -73,6 +73,15 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_autofetch_interval` | `5` | minutes between background fetches |
 | `@git_revamped_last_commit` | `0` | set to `1` to show the last-commit age |
 | `@git_revamped_web` | `0` | set to `1` to show provider counts: PR, review, and issue on GitHub and GitLab, plus a bug count on GitHub |
+| `@git_revamped_upstream` | `0` | set to `1` to show the upstream ref, or a no-upstream `local` warning |
+| `@git_revamped_worktree` | `0` | set to `1` to flag a linked worktree |
+| `@git_revamped_submodule` | `0` | set to `1` to show the count of dirty submodules |
+| `@git_revamped_clean` | `0` | set to `1` to show a clean-tree indicator |
+| `@git_revamped_base_branch` | empty | set to a branch like `main` to show commits ahead of that base |
+| `@git_revamped_ci` | `1` | within the web path, set to `0` to hide the CI check status |
+| `@git_revamped_key_lazygit` | empty | key to bind for the lazygit popup, for example `g` |
+| `@git_revamped_key_menu` | empty | key to bind for the branch switcher menu |
+| `@git_revamped_key_browse` | empty | key to bind to open the repo on its provider |
 | `@git_revamped_branch_{color,icon}` | empty | branch styling |
 | `@git_revamped_changed_{color,icon}` | yellow, `~` | modified-file styling |
 | `@git_revamped_insertions_{color,icon}` | green, `+` | inserted-lines styling |
@@ -86,6 +95,13 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_behind_{color,icon}` | yellow, `v` | behind styling |
 | `@git_revamped_commit_{color,icon}` | blue, `@` | last-commit styling |
 | `@git_revamped_{pr,review,issue,bug}_{color,icon}` | see defaults | provider segment styling |
+| `@git_revamped_upstream_{color,icon}` | cyan, `->` | upstream ref styling |
+| `@git_revamped_noupstream_{color,icon}` | yellow, `!` | no-upstream warning styling |
+| `@git_revamped_divergence_{color,icon}` | magenta, `~>` | base-divergence styling |
+| `@git_revamped_worktree_{color,icon}` | cyan, `wt` | linked-worktree styling |
+| `@git_revamped_submodule_{color,icon}` | yellow, `sub` | dirty-submodule styling |
+| `@git_revamped_clean_{color,icon}` | green, `ok` | clean-tree styling |
+| `@git_revamped_ci_{pass,fail,pending}_{color,icon,label}` | green/red/yellow, `CI` | CI status styling |
 
 > [!IMPORTANT]
 > The `@git_revamped_web` segment calls the GitHub or GitLab API on every refresh
@@ -93,6 +109,37 @@ you can replace with Nerd Font glyphs.
 > default. Leave it off unless you accept the API calls and their rate limits.
 > On GitHub, issues labeled `bug` count toward the bug segment and are excluded
 > from the issue segment, so the two never double-count the same issue.
+>
+> The web path also reports the head commit's CI status through `gh pr checks` or
+> `glab ci status`. Set `@git_revamped_ci` to `0` to skip that extra call.
+
+## Actions and key bindings
+
+Three actions are available as dispatcher subcommands and are bound to keys only when you set the matching option. Leaving an option unset means no key is bound, so the plugin never overrides a key you did not opt into.
+
+| Option | Action |
+|--------|--------|
+| `@git_revamped_key_lazygit` | open lazygit in a popup rooted at the pane's repository, on tmux 3.2+, with a new-window fallback on older tmux |
+| `@git_revamped_key_menu` | open a branch switcher menu and check out the chosen branch, refusing when the working tree is dirty |
+| `@git_revamped_key_browse` | open the current repository on GitHub or GitLab in your browser through `gh` or `glab` |
+
+```tmux
+set -g @git_revamped_key_lazygit 'g'
+set -g @git_revamped_key_menu 'b'
+set -g @git_revamped_key_browse 'o'
+```
+
+Each action feature-detects its tool and only runs when the pane is inside a repository. A dead key with a missing tool does nothing.
+
+## Doctor
+
+Run the capability report to see what was detected on this host and why a segment might be empty:
+
+```bash
+~/.tmux/plugins/tmux-git-revamped/src/git.sh doctor "$PWD"
+```
+
+It prints the version, whether the path is a repository, which tools were found, the detected provider, and whether tmux supports popups.
 
 ## Theme color suggestions
 

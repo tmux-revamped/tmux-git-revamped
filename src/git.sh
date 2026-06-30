@@ -3,16 +3,20 @@
 # git.sh: command dispatcher for tmux-git-revamped.
 #
 # Usage: git.sh status <dir> | branch <dir> | refresh <dir>
+#        git.sh lazygit <dir> | menu <dir> | checkout <dir> <branch>
+#        git.sh browse <dir> | doctor <dir>
 #
 # The full status string can run slow work (diff, stash, provider API calls), so
 # it is cached per directory in a tmux server user-option and refreshed by a
 # detached worker. The status render returns the cached value instantly. The
-# branch alone is one fast rev-parse, so it is computed live.
+# branch alone is one fast rev-parse, so it is computed live. The action
+# subcommands are bound to keys and never run on the status path.
 
 PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 export CACHE_PREFIX="git_revamped"
 export PLUGIN_LOG_NS="git-revamped"
+export GIT_ACTION_CMD="${PLUGIN_DIR}/src/git.sh"
 
 # shellcheck source=/dev/null
 source "${PLUGIN_DIR}/src/lib/utils/has-command.sh"
@@ -24,6 +28,8 @@ source "${PLUGIN_DIR}/src/lib/utils/cache.sh"
 source "${PLUGIN_DIR}/src/lib/git/git.sh"
 # shellcheck source=/dev/null
 source "${PLUGIN_DIR}/src/lib/git/render.sh"
+# shellcheck source=/dev/null
+source "${PLUGIN_DIR}/src/lib/git/actions.sh"
 
 git_max_age() {
   get_tmux_option "@git_revamped_interval" "5"
@@ -33,7 +39,22 @@ _git_key() {
   printf 'status_%s' "$(printf '%s' "${1}" | tr -c 'A-Za-z0-9' '_')"
 }
 
-# git_web_segment DIR -> provider PR, review, issue, and bug counts, leading
+# git_ci_segment DIR PROVIDER -> a leading-space CI token for the head commit,
+# empty when CI reporting is off or no status is available. Runs only inside the
+# opt-in web path, so the provider CLI is already gated by the caller.
+git_ci_segment() {
+  local dir="${1}" provider="${2}" status=""
+  [[ "$(get_tmux_option "@git_revamped_ci" "1")" == "1" ]] || return 0
+  if [[ "${provider}" == "github" ]]; then
+    status="$(ci_status_from_buckets "$(_gh_ci_buckets)")"
+  elif [[ "${provider}" == "gitlab" ]]; then
+    status="$(ci_status_from_glab "$(_glab_ci_status)")"
+  fi
+  [[ -z "${status}" ]] && return 0
+  echo " $(git_render_ci "${status}")"
+}
+
+# git_web_segment DIR -> provider PR, review, issue, bug, and CI segments, leading
 # space. On GitHub the issue count excludes bug-labeled issues, which surface as
 # a separate bug segment. GitLab reports no separate bug count.
 git_web_segment() {
@@ -57,17 +78,35 @@ git_web_segment() {
   [[ "${review}" =~ ^[0-9]+$ ]] || review=0
   [[ "${issue}" =~ ^[0-9]+$ ]] || issue=0
   [[ "${bug}" =~ ^[0-9]+$ ]] || bug=0
-  echo " $(git_render_count pr "${pr}") $(git_render_count review "${review}") $(git_render_count issue "${issue}") $(git_render_count bug "${bug}")"
+  echo " $(git_render_count pr "${pr}") $(git_render_count review "${review}") $(git_render_count issue "${issue}") $(git_render_count bug "${bug}")$(git_ci_segment "${dir}" "${provider}")"
 }
 
 # git_build_status DIR -> the full formatted status string.
 git_build_status() {
-  local dir="${1}" status header branch out modified untracked
+  local dir="${1}" status header branch out modified untracked detached=0
   status="$(_git_status "${dir}")"
   [[ -z "${status}" ]] && return 0
   header="$(printf '%s\n' "${status}" | head -1)"
-  branch="$(truncate_branch "$(parse_branch "${header}")" "$(get_tmux_option "@git_revamped_max_branch" "25")")"
+  branch="$(parse_branch "${header}")"
+  if [[ "${branch}" == "HEAD" ]]; then
+    detached=1
+    local sha tag label
+    sha="$(_git_short_sha "${dir}")"
+    tag="$(_git_describe "${dir}")"
+    label="$(detached_head_label "${sha}" "${tag}")"
+    [[ -n "${label}" ]] && branch="${label}"
+  fi
+  branch="$(truncate_branch "${branch}" "$(get_tmux_option "@git_revamped_max_branch" "25")")"
   out="$(git_render_branch "${branch}")"
+
+  if (( detached == 0 )) && [[ "$(get_tmux_option "@git_revamped_upstream" "0")" == "1" ]]; then
+    local upstream; upstream="$(parse_upstream "${header}")"
+    if [[ -n "${upstream}" ]]; then
+      out="${out} $(git_render_count upstream "${upstream}")"
+    else
+      out="${out} $(git_render_count noupstream "local")"
+    fi
+  fi
 
   modified="$(count_modified "${status}")"
   local changed=0 ins=0 del=0
@@ -78,8 +117,8 @@ git_build_status() {
   (( ins > 0 )) && out="${out} $(git_render_count insertions "${ins}")"
   (( del > 0 )) && out="${out} $(git_render_count deletions "${del}")"
 
+  untracked="$(count_untracked "${status}")"
   if [[ "$(get_tmux_option "@git_revamped_untracked" "1")" == "1" ]]; then
-    untracked="$(count_untracked "${status}")"
     (( untracked > 0 )) && out="${out} $(git_render_count untracked "${untracked}")"
   fi
 
@@ -110,10 +149,31 @@ git_build_status() {
     [[ -n "${state}" ]] && out="${out} $(git_render_count state "${state}")"
   fi
 
+  if [[ "$(get_tmux_option "@git_revamped_worktree" "0")" == "1" ]]; then
+    is_linked_worktree "$(_git_dir "${dir}")" && out="${out} $(git_render_count worktree "wt")"
+  fi
+
+  local base; base="$(get_tmux_option "@git_revamped_base_branch" "")"
+  if [[ -n "${base}" ]]; then
+    local div; div="$(_git_base_count "${dir}" "${base}")"
+    [[ "${div}" =~ ^[0-9]+$ ]] && (( div > 0 )) && out="${out} $(git_render_count divergence "${div}")"
+  fi
+
+  if [[ "$(get_tmux_option "@git_revamped_submodule" "0")" == "1" ]]; then
+    local subs; subs="$(count_submodule_dirty "$(_git_submodule_status "${dir}")")"
+    [[ "${subs}" =~ ^[0-9]+$ ]] && (( subs > 0 )) && out="${out} $(git_render_count submodule "${subs}")"
+  fi
+
   if [[ "$(get_tmux_option "@git_revamped_last_commit" "0")" == "1" ]]; then
     local ts age; ts="$(_git_last_commit_ts "${dir}")"
     age="$(relative_time "$(_git_now)" "${ts}")"
     [[ -n "${age}" ]] && out="${out} $(git_render_count commit "${age}")"
+  fi
+
+  if [[ "$(get_tmux_option "@git_revamped_clean" "0")" == "1" ]]; then
+    if (( modified == 0 && untracked == 0 )); then
+      out="${out} $(git_render_count clean "ok")"
+    fi
   fi
 
   if [[ "$(get_tmux_option "@git_revamped_web" "0")" == "1" ]]; then
@@ -123,9 +183,10 @@ git_build_status() {
   echo "${out}"
 }
 
-# _git_fetch DIR -> a detached background fetch. Seam; tests override it.
+# _git_fetch DIR -> a detached background fetch that prunes deleted remote
+# branches and updates tags. Seam; tests override it.
 _git_fetch() {
-  ( git -C "${1}" --no-optional-locks fetch --quiet >/dev/null 2>&1 ) &
+  ( git -C "${1}" --no-optional-locks fetch --quiet --prune --tags >/dev/null 2>&1 ) &
   disown 2>/dev/null || true
 }
 
@@ -177,9 +238,14 @@ main() {
   fi
 
   case "${cmd}" in
-    status) git_render_status "${dir}" ;;
-    branch) git_render_branch_cmd "${dir}" ;;
-    *)      return 0 ;;
+    status)   git_render_status "${dir}" ;;
+    branch)   git_render_branch_cmd "${dir}" ;;
+    lazygit)  git_action_lazygit "${dir}" ;;
+    menu)     git_action_menu "${dir}" ;;
+    checkout) git_action_checkout "${dir}" "${3:-}" ;;
+    browse)   git_action_browse "${dir}" ;;
+    doctor)   git_doctor "${dir}" ;;
+    *)        return 0 ;;
   esac
 }
 

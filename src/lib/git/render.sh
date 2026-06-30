@@ -30,6 +30,12 @@ _git_default_color() {
     review)     echo "#[fg=magenta]" ;;
     issue)      echo "#[fg=blue]" ;;
     bug)        echo "#[fg=red]" ;;
+    upstream)   echo "#[fg=cyan]" ;;
+    noupstream) echo "#[fg=yellow]" ;;
+    divergence) echo "#[fg=magenta]" ;;
+    worktree)   echo "#[fg=cyan]" ;;
+    submodule)  echo "#[fg=yellow]" ;;
+    clean)      echo "#[fg=green]" ;;
     *)          echo "" ;;
   esac
 }
@@ -51,6 +57,12 @@ _git_default_icon() {
     review)     echo "R" ;;
     issue)      echo "I" ;;
     bug)        echo "B" ;;
+    upstream)   echo "->" ;;
+    noupstream) echo "!" ;;
+    divergence) echo "~>" ;;
+    worktree)   echo "wt" ;;
+    submodule)  echo "sub" ;;
+    clean)      echo "ok" ;;
     *)          echo "" ;;
   esac
 }
@@ -79,7 +91,24 @@ git_render_branch() {
   fi
 }
 
+# git_render_ci STATUS -> a CI token colored by status, empty for unknown status.
+# pass is green, fail is red, pending is yellow; each color, icon, and label is
+# overridable through @git_revamped_ci_<status>_{color,icon,label}.
+git_render_ci() {
+  local status="${1}" color icon label
+  case "${status}" in
+    pass)    color=$(get_tmux_option "@git_revamped_ci_pass_color" "#[fg=green]") ;;
+    fail)    color=$(get_tmux_option "@git_revamped_ci_fail_color" "#[fg=red]") ;;
+    pending) color=$(get_tmux_option "@git_revamped_ci_pending_color" "#[fg=yellow]") ;;
+    *)       return 0 ;;
+  esac
+  icon=$(get_tmux_option "@git_revamped_ci_${status}_icon" "CI")
+  label=$(get_tmux_option "@git_revamped_ci_${status}_label" "${status}")
+  echo "${color}${icon} ${label}${_GIT_RESET}"
+}
+
 export -f _git_default_color
 export -f _git_default_icon
 export -f git_render_count
 export -f git_render_branch
+export -f git_render_ci

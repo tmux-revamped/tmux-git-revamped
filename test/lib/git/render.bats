@@ -80,3 +80,39 @@ teardown() {
   set_tmux_option "@git_revamped_deletions_color" "#[fg=brightred]"
   [[ "$(git_render_count deletions 3)" == *"#[fg=brightred]"* ]]
 }
+
+@test "render.sh - _git_default_color covers the new segments" {
+  [[ "$(_git_default_color upstream)" == "#[fg=cyan]" ]]
+  [[ "$(_git_default_color noupstream)" == "#[fg=yellow]" ]]
+  [[ "$(_git_default_color divergence)" == "#[fg=magenta]" ]]
+  [[ "$(_git_default_color worktree)" == "#[fg=cyan]" ]]
+  [[ "$(_git_default_color submodule)" == "#[fg=yellow]" ]]
+  [[ "$(_git_default_color clean)" == "#[fg=green]" ]]
+}
+
+@test "render.sh - _git_default_icon covers the new segments" {
+  [[ "$(_git_default_icon upstream)" == "->" ]]
+  [[ "$(_git_default_icon noupstream)" == "!" ]]
+  [[ "$(_git_default_icon divergence)" == "~>" ]]
+  [[ "$(_git_default_icon worktree)" == "wt" ]]
+  [[ "$(_git_default_icon submodule)" == "sub" ]]
+  [[ "$(_git_default_icon clean)" == "ok" ]]
+}
+
+@test "render.sh - git_render_ci colors each status" {
+  [[ "$(git_render_ci pass)" == "#[fg=green]CI pass#[default]" ]]
+  [[ "$(git_render_ci fail)" == "#[fg=red]CI fail#[default]" ]]
+  [[ "$(git_render_ci pending)" == "#[fg=yellow]CI pending#[default]" ]]
+}
+
+@test "render.sh - git_render_ci is empty for an unknown status" {
+  [[ -z "$(git_render_ci bogus)" ]]
+  [[ -z "$(git_render_ci '')" ]]
+}
+
+@test "render.sh - git_render_ci honors color, icon, and label overrides" {
+  set_tmux_option "@git_revamped_ci_pass_color" "#[fg=blue]"
+  set_tmux_option "@git_revamped_ci_pass_icon" "build"
+  set_tmux_option "@git_revamped_ci_pass_label" "green"
+  [[ "$(git_render_ci pass)" == "#[fg=blue]build green#[default]" ]]
+}
