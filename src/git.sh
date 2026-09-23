@@ -186,7 +186,7 @@ git_build_status() {
 # _git_fetch DIR -> a detached background fetch that prunes deleted remote
 # branches and updates tags. Seam; tests override it.
 _git_fetch() {
-  ( git -C "${1}" --no-optional-locks fetch --quiet --prune --tags >/dev/null 2>&1 ) &
+  ( git -C "${1}" --no-optional-locks fetch --quiet --prune --tags ) </dev/null >/dev/null 2>&1 &
   disown 2>/dev/null || true
 }
 
