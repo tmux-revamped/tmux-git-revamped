@@ -364,3 +364,20 @@ teardown() {
   run main branch /repo
   [[ -z "${output}" ]]
 }
+
+@test "git.sh - _git_fetch returns before the fetch it started finishes" {
+  local shim="${BATS_TEST_TMPDIR}/bin"
+  mkdir -p "${shim}"
+  printf '#!/bin/sh\nsleep 6\n' > "${shim}/git"
+  chmod +x "${shim}/git"
+
+  local start end
+  start="$(date +%s)"
+  run bash -c 'PATH="'"${shim}"':${PATH}"; . "'"${BATS_TEST_DIRNAME}"'/../../../src/lib/git/git.sh" 2>/dev/null || true
+    out=$(_git_fetch /tmp)
+    printf "returned\n"'
+  end="$(date +%s)"
+
+  [[ "${output}" == *"returned"* ]]
+  (( end - start < 5 ))
+}
