@@ -40,8 +40,11 @@ update_option() {
 # dispatcher SUBCOMMAND against the active pane's path. Unset option means no
 # binding, so the plugin never clobbers a key the user did not opt into.
 bind_action_key() {
-  local option="${1}" subcommand="${2}" key
+  local option="${1}" subcommand="${2}" fallback="${3:-}" key
   key=$(tmux show-option -gqv "${option}")
+  if ! tmux show-options -g 2>/dev/null | grep -qE "^${option}( |$)"; then
+    key="${fallback}"
+  fi
   [[ -z "${key}" ]] && return 0
   tmux bind-key "${key}" run-shell "${GIT_CMD} ${subcommand} '#{pane_current_path}'"
 }
@@ -52,5 +55,5 @@ update_option "status-left"
 update_option "status-right"
 
 bind_action_key "@git_revamped_key_lazygit" "lazygit"
-bind_action_key "@git_revamped_key_menu" "menu"
+bind_action_key "@git_revamped_key_menu" "menu" "M-v"
 bind_action_key "@git_revamped_key_browse" "browse"
