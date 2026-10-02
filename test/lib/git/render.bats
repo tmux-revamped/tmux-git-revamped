@@ -147,3 +147,54 @@ teardown() {
 
   [[ "${output}" == "#[fg=red]CI fail#[default]" ]]
 }
+
+@test "render.sh - the default icon set stays ascii" {
+  run _git_default_icon changed
+
+  [[ "${output}" == "~" ]]
+}
+
+@test "render.sh - the nerd icon set swaps every default for a glyph" {
+  set_tmux_option "@git_revamped_icons" "nerd"
+
+  run _git_default_icon changed
+
+  [[ "${output}" == $'\xef\x91\x99' ]]
+}
+
+@test "render.sh - the nerd icon set covers every segment kind" {
+  set_tmux_option "@git_revamped_icons" "nerd"
+  local kind
+  for kind in changed insertions deletions untracked staged conflict state stash ahead behind commit pr review issue bug upstream noupstream divergence worktree submodule clean; do
+    [[ -n "$(_git_default_icon "${kind}")" ]] || { echo "no glyph for ${kind}"; return 1; }
+  done
+}
+
+@test "render.sh - a per-segment icon beats the icon set" {
+  set_tmux_option "@git_revamped_icons" "nerd"
+  set_tmux_option "@git_revamped_changed_icon" "M"
+
+  run git_render_count changed 4
+
+  [[ "${output}" == "#[fg=yellow]M 4#[default]" ]]
+}
+
+@test "render.sh - the CI icon follows the icon set" {
+  set_tmux_option "@git_revamped_icons" "nerd"
+
+  run git_render_ci pass
+
+  [[ "${output}" == "#[fg=green]"$'\xf3\xb0\x97\xa0'" pass#[default]" ]]
+}
+
+@test "render.sh - a flag renders its icon once" {
+  run git_render_flag clean "ok"
+
+  [[ "${output}" == "#[fg=green]ok#[default]" ]]
+}
+
+@test "render.sh - a flag falls back to its label without an icon" {
+  run git_render_flag other "label"
+
+  [[ "${output}" == "label#[default]" ]]
+}

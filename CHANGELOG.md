@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `@git_revamped_icons`, a default icon set for every segment. `ascii` keeps
+  the plain characters; `nerd` uses Nerd Font glyphs. A per-segment icon option
+  still overrides it.
 - `@git_revamped_before` and `@git_revamped_after`, placed around the status
   and the branch only when there is something to show, so a theme can draw a
   pill that disappears outside a repository.
@@ -27,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The worktree and clean flags printed their text twice, as `wt wt` and
+  `ok ok`. They now render their icon once.
 - The status and branch jobs passed the pane path unquoted, so a repository
   whose path holds a space, such as `~/Work/Acme Corp/app`, rendered nothing.
   The path is now quoted.

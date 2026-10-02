@@ -104,7 +104,7 @@ teardown() {
   set_tmux_option "@git_revamped_worktree" "1"
   _git_dir() { echo "/repo/.git/worktrees/feat"; }
   run git_build_status /repo
-  [[ "${output}" == *"#[fg=cyan]wt wt#[default]"* ]]
+  [[ "${output}" == *"#[fg=cyan]wt#[default]"* ]]
 }
 
 @test "git.sh dispatcher - worktree indicator absent for the main worktree" {
@@ -139,7 +139,7 @@ teardown() {
   set_tmux_option "@git_revamped_clean" "1"
   _git_status() { printf '## main...origin/main\n'; }
   run git_build_status /repo
-  [[ "${output}" == *"#[fg=green]ok ok#[default]"* ]]
+  [[ "${output}" == *"#[fg=green]ok#[default]"* ]]
 }
 
 @test "git.sh dispatcher - clean indicator is hidden on a dirty tree" {

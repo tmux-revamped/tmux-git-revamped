@@ -202,7 +202,7 @@ git_build_status() {
 	fi
 
 	if [[ "$(get_tmux_option "@git_revamped_worktree" "0")" == "1" ]]; then
-		is_linked_worktree "$(_git_dir "${dir}")" && out="${out} $(git_render_count worktree "wt")"
+		is_linked_worktree "$(_git_dir "${dir}")" && out="${out} $(git_render_flag worktree "wt")"
 	fi
 
 	local base
@@ -228,7 +228,7 @@ git_build_status() {
 
 	if [[ "$(get_tmux_option "@git_revamped_clean" "0")" == "1" ]]; then
 		if ((modified == 0 && untracked == 0)); then
-			out="${out} $(git_render_count clean "ok")"
+			out="${out} $(git_render_flag clean "ok")"
 		fi
 	fi
 
