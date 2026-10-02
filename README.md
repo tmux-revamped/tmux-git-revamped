@@ -88,6 +88,7 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_before` | empty | format placed before the status, only when the status is not empty, for example a theme's pill opening |
 | `@git_revamped_after` | empty | format placed after the status, only when the status is not empty |
 | `@git_revamped_reset` | `#[default]` | style that closes every segment; set it to a plain `#[fg=...]` to keep a background set by `@git_revamped_before` |
+| `@git_revamped_icons` | `ascii` | default icon set for every segment: `ascii` uses plain characters, `nerd` uses Nerd Font glyphs; any `@git_revamped_<kind>_icon` still overrides it |
 | `@git_revamped_branch_{color,icon}` | empty | branch styling |
 | `@git_revamped_changed_{color,icon}` | yellow, `~` | modified-file styling |
 | `@git_revamped_insertions_{color,icon}` | green, `+` | inserted-lines styling |
@@ -120,6 +121,37 @@ you can replace with Nerd Font glyphs.
 > `glab ci status`. Set `@git_revamped_ci` to `0` to skip that extra call.
 >
 > The provider calls run inside the repository of the active pane, and each repository speaks to its provider as its own account. On GitHub the account is the login in the project's `user.email` when that is a GitHub noreply address, such as `299237933+octocat@users.noreply.github.com`, then the `@git_revamped_gh_accounts` entry for the repository owner, then the active `gh` account. The account's token comes from `gh auth token --user <account>`, so every account must be logged in to `gh`. GitLab is reached through the host in the repository's remote, so each GitLab instance uses the account `glab` holds for it. An SSH host alias such as `git@github-work:owner/repo.git` is resolved through `ssh -G` to find the provider.
+
+## Icon sets
+
+`@git_revamped_icons` picks the default icon of every segment at once. `ascii`, the default, works in any font. `nerd` needs a [Nerd Font](https://www.nerdfonts.com) and uses these glyphs:
+
+| Segment | `ascii` | `nerd` glyph |
+|---------|---------|--------------|
+| changed | `~` | `oct-diff_modified` |
+| insertions | `+` | `oct-diff_added` |
+| deletions | `-` | `oct-diff_removed` |
+| untracked | `?` | `md-file_question_outline` |
+| staged | `S` | `md-check_all` |
+| conflict | `!` | `oct-alert` |
+| state | none | `oct-git_merge` |
+| stash | `$` | `md-archive` |
+| ahead | `^` | `md-arrow_up` |
+| behind | `v` | `md-arrow_down` |
+| commit | `@` | `oct-history` |
+| pr | `PR` | `oct-git_pull_request` |
+| review | `R` | `oct-eye` |
+| issue | `I` | `oct-issue_opened` |
+| bug | `B` | `fa-bug` |
+| upstream | `->` | `oct-git_compare` |
+| noupstream | `!` | `md-cloud_off_outline` |
+| divergence | `~>` | `md-source_fork` |
+| worktree | `wt` | `md-folder_multiple_outline` |
+| submodule | `sub` | `oct-file_submodule` |
+| clean | `ok` | `md-check` |
+| CI pass, fail, pending | `CI` | `md-check_circle`, `md-close_circle`, `md-clock_outline` |
+
+The worktree and clean segments are flags, so they render their icon alone.
 
 ## Actions and key bindings
 
