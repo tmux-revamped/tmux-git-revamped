@@ -152,10 +152,10 @@ block below into `~/.tmux.conf`.
 
 ### Catppuccin Mocha
 
-To render the status as a Catppuccin pill that disappears outside a repository, open and close the pill around it and keep the pill's background across segments:
+To render the status as a Catppuccin pill that disappears outside a repository, open and close the pill around it and keep the pill's background across segments. Double quotes let tmux turn `\ue0a0` into the branch glyph:
 
 ```tmux
-set -g @git_revamped_before '#[fg=#{@thm_peach}]#{@catppuccin_status_left_separator}#[fg=#{@thm_crust},bg=#{@thm_peach}]\ue0a0 #{@catppuccin_status_middle_separator}#[fg=#{@thm_fg},bg=#{E:@catppuccin_status_module_text_bg}] '
+set -g @git_revamped_before "#[fg=#{@thm_peach}]#{@catppuccin_status_left_separator}#[fg=#{@thm_crust},bg=#{@thm_peach}]\ue0a0 #{@catppuccin_status_middle_separator}#[fg=#{@thm_fg},bg=#{E:@catppuccin_status_module_text_bg}] "
 set -g @git_revamped_after '#[fg=#{E:@catppuccin_status_module_text_bg},bg=default]#{@catppuccin_status_right_separator}'
 set -g @git_revamped_reset '#[fg=#{@thm_fg}]'
 ```
