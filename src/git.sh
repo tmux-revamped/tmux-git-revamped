@@ -223,6 +223,12 @@ git_autofetch() {
 	_git_fetch "${dir}"
 }
 
+git_wrap() {
+	local out="${1}"
+	[[ -n "${out}" ]] || return 0
+	printf '%s%s%s\n' "$(get_tmux_option "@git_revamped_before" "")" "${out}" "$(get_tmux_option "@git_revamped_after" "")"
+}
+
 git_refresh() {
 	git_autofetch "${1}"
 	cache_set "${2}" "$(git_build_status "${1}")"
@@ -235,7 +241,7 @@ git_render_status() {
 		return 0
 	}
 	key="$(_git_key "${dir}")"
-	cache_render "${key}" "$(git_max_age)" git_refresh "${dir}" "${key}"
+	git_wrap "$(cache_render "${key}" "$(git_max_age)" git_refresh "${dir}" "${key}")"
 }
 
 git_render_branch_cmd() {
@@ -246,7 +252,7 @@ git_render_branch_cmd() {
 	}
 	branch="$(_git_branch "${dir}")"
 	[[ -z "${branch}" ]] && return 0
-	git_render_branch "$(truncate_branch "${branch}" "$(get_tmux_option "@git_revamped_max_branch" "25")")"
+	git_wrap "$(git_render_branch "$(truncate_branch "${branch}" "$(get_tmux_option "@git_revamped_max_branch" "25")")")"
 }
 
 main() {

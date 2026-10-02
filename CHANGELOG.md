@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `@git_revamped_before` and `@git_revamped_after`, placed around the status
+  and the branch only when there is something to show, so a theme can draw a
+  pill that disappears outside a repository.
+- `@git_revamped_reset`, the style that closes every segment. It defaults to
+  `#[default]` as before; a plain foreground keeps the background a pill set.
+
 ## [1.2.0] - 2026-06-29
 
 ### Added

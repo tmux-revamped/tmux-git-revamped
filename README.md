@@ -82,6 +82,9 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_key_lazygit` | empty | key to bind for the lazygit popup, for example `g` |
 | `@git_revamped_key_menu` | empty | key to bind for the branch switcher menu |
 | `@git_revamped_key_browse` | empty | key to bind to open the repo on its provider |
+| `@git_revamped_before` | empty | format placed before the status, only when the status is not empty, for example a theme's pill opening |
+| `@git_revamped_after` | empty | format placed after the status, only when the status is not empty |
+| `@git_revamped_reset` | `#[default]` | style that closes every segment; set it to a plain `#[fg=...]` to keep a background set by `@git_revamped_before` |
 | `@git_revamped_branch_{color,icon}` | empty | branch styling |
 | `@git_revamped_changed_{color,icon}` | yellow, `~` | modified-file styling |
 | `@git_revamped_insertions_{color,icon}` | green, `+` | inserted-lines styling |
@@ -148,6 +151,15 @@ so the segments match any theme out of the box. For exact hex values, copy one
 block below into `~/.tmux.conf`.
 
 ### Catppuccin Mocha
+
+To render the status as a Catppuccin pill that disappears outside a repository, open and close the pill around it and keep the pill's background across segments:
+
+```tmux
+set -g @git_revamped_before '#[fg=#{@thm_peach}]#{@catppuccin_status_left_separator}#[fg=#{@thm_crust},bg=#{@thm_peach}]\ue0a0 #{@catppuccin_status_middle_separator}#[fg=#{@thm_fg},bg=#{E:@catppuccin_status_module_text_bg}] '
+set -g @git_revamped_after '#[fg=#{E:@catppuccin_status_module_text_bg},bg=default]#{@catppuccin_status_right_separator}'
+set -g @git_revamped_reset '#[fg=#{@thm_fg}]'
+```
+
 
 ```tmux
 set -g @git_revamped_insertions_color '#[fg=#a6e3a1]'
