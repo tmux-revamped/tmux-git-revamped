@@ -381,3 +381,38 @@ teardown() {
   [[ "${output}" == *"returned"* ]]
   (( end - start < 5 ))
 }
+
+@test "git.sh dispatcher - status is wrapped in before and after when set" {
+  set_tmux_option "@git_revamped_before" "<<"
+  set_tmux_option "@git_revamped_after" ">>"
+
+  run git_render_status /repo
+
+  [[ "${output}" == "<<main#[default] "*">>" ]]
+}
+
+@test "git.sh dispatcher - nothing is wrapped outside a repository" {
+  set_tmux_option "@git_revamped_before" "<<"
+  set_tmux_option "@git_revamped_after" ">>"
+  _git_in_repo() { return 1; }
+
+  run git_render_status /not-a-repo
+
+  [ "${status}" -eq 0 ]
+  [ -z "${output}" ]
+}
+
+@test "git.sh dispatcher - status is unwrapped by default" {
+  run git_render_status /repo
+
+  [[ "${output}" == "main#[default] "* ]]
+}
+
+@test "git.sh dispatcher - branch command is wrapped when set" {
+  set_tmux_option "@git_revamped_before" "<<"
+  set_tmux_option "@git_revamped_after" ">>"
+
+  run git_render_branch_cmd /repo
+
+  [[ "${output}" == "<<main#[default]>>" ]]
+}

@@ -11,7 +11,9 @@ _GIT_RENDER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 source "${_GIT_RENDER_DIR}/../tmux/tmux-ops.sh"
 
-_GIT_RESET="#[default]"
+_git_reset() {
+  get_tmux_option "@git_revamped_reset" "#[default]"
+}
 
 _git_default_color() {
   case "${1}" in
@@ -73,9 +75,9 @@ git_render_count() {
   color=$(get_tmux_option "@git_revamped_${kind}_color" "$(_git_default_color "${kind}")")
   icon=$(get_tmux_option "@git_revamped_${kind}_icon" "$(_git_default_icon "${kind}")")
   if [[ -n "${icon}" ]]; then
-    echo "${color}${icon} ${val}${_GIT_RESET}"
+    echo "${color}${icon} ${val}$(_git_reset)"
   else
-    echo "${color}${val}${_GIT_RESET}"
+    echo "${color}${val}$(_git_reset)"
   fi
 }
 
@@ -85,9 +87,9 @@ git_render_branch() {
   color=$(get_tmux_option "@git_revamped_branch_color" "")
   icon=$(get_tmux_option "@git_revamped_branch_icon" "")
   if [[ -n "${icon}" ]]; then
-    echo "${color}${icon} ${1}${_GIT_RESET}"
+    echo "${color}${icon} ${1}$(_git_reset)"
   else
-    echo "${color}${1}${_GIT_RESET}"
+    echo "${color}${1}$(_git_reset)"
   fi
 }
 
@@ -104,9 +106,10 @@ git_render_ci() {
   esac
   icon=$(get_tmux_option "@git_revamped_ci_${status}_icon" "CI")
   label=$(get_tmux_option "@git_revamped_ci_${status}_label" "${status}")
-  echo "${color}${icon} ${label}${_GIT_RESET}"
+  echo "${color}${icon} ${label}$(_git_reset)"
 }
 
+export -f _git_reset
 export -f _git_default_color
 export -f _git_default_icon
 export -f git_render_count

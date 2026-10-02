@@ -116,3 +116,17 @@ teardown() {
   set_tmux_option "@git_revamped_ci_pass_label" "green"
   [[ "$(git_render_ci pass)" == "#[fg=blue]build green#[default]" ]]
 }
+
+@test "render.sh - reset defaults to the tmux default style" {
+  run git_render_count changed 4
+
+  [[ "${output}" == "#[fg=yellow]~ 4#[default]" ]]
+}
+
+@test "render.sh - reset follows the configured style" {
+  set_tmux_option "@git_revamped_reset" "#[fg=white]"
+
+  run git_render_branch main
+
+  [[ "${output}" == "main#[fg=white]" ]]
+}
