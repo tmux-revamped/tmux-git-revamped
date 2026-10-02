@@ -15,6 +15,19 @@ _git_reset() {
   get_tmux_option "@git_revamped_reset" "#[default]"
 }
 
+_git_option_exists() {
+  [[ -n "$(tmux show-option -gq "${1}" 2>/dev/null)" ]]
+}
+
+_git_ci_label() {
+  local option="@git_revamped_ci_${1}_label"
+  if _git_option_exists "${option}"; then
+    tmux show-option -gqv "${option}" 2>/dev/null
+  else
+    echo "${1}"
+  fi
+}
+
 _git_default_color() {
   case "${1}" in
     changed)    echo "#[fg=yellow]" ;;
@@ -105,11 +118,17 @@ git_render_ci() {
     *)       return 0 ;;
   esac
   icon=$(get_tmux_option "@git_revamped_ci_${status}_icon" "CI")
-  label=$(get_tmux_option "@git_revamped_ci_${status}_label" "${status}")
-  echo "${color}${icon} ${label}$(_git_reset)"
+  label="$(_git_ci_label "${status}")"
+  if [[ -z "${label}" ]]; then
+    echo "${color}${icon}$(_git_reset)"
+  else
+    echo "${color}${icon} ${label}$(_git_reset)"
+  fi
 }
 
 export -f _git_reset
+export -f _git_option_exists
+export -f _git_ci_label
 export -f _git_default_color
 export -f _git_default_icon
 export -f git_render_count

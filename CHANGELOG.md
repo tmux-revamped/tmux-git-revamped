@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   five-second status refresh.
 - `@git_revamped_web_zero`. Setting it to `0` hides provider counts that are
   zero.
+- A CI label set to an empty string shows the CI icon alone, without a
+  trailing space.
 - The provider segment speaks to GitHub as the account the project names: the
   login in its `user.email` noreply address, then the `@git_revamped_gh_accounts`
   owner map, then the active `gh` account.
