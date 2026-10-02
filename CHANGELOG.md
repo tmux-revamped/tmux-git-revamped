@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The status and branch jobs passed the pane path unquoted, so a repository
+  whose path holds a space, such as `~/Work/Acme Corp/app`, rendered nothing.
+  The path is now quoted.
 - The provider calls ran in the status worker's working directory rather than
   the repository's, so `gh` and `glab` counted another repository or nothing at
   all. They now run inside the repository of the active pane.

@@ -16,8 +16,8 @@ placeholders=(
 )
 
 commands=(
-  "#(${GIT_CMD} status #{pane_current_path})"
-  "#(${GIT_CMD} branch #{pane_current_path})"
+  "#(${GIT_CMD} status '#{pane_current_path}')"
+  "#(${GIT_CMD} branch '#{pane_current_path}')"
 )
 
 interpolate() {
