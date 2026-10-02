@@ -58,10 +58,39 @@ git_ci_segment() {
 # space. On GitHub the issue count excludes bug-labeled issues, which surface as
 # a separate bug segment. GitLab reports no separate bug count.
 git_web_segment() {
-	local dir="${1}" url provider pr review issue bug=0 total
+	local dir="${1}" url provider
 	url="$(_git_remote_url "${dir}")"
-	provider="$(provider_from_url "${url}")"
+	provider="$(git_provider "${url}")"
 	[[ -z "${provider}" ]] && return 0
+	(
+		cd "${dir}" 2>/dev/null || exit 0
+		_git_web_use_account "${dir}" "${provider}" "${url}"
+		_git_web_counts "${dir}" "${provider}"
+	)
+}
+
+_git_web_use_account() {
+	local dir="${1}" provider="${2}" url="${3}" account token
+	[[ "${provider}" == "github" ]] || return 0
+	account="$(gh_login_from_email "$(_git_user_email "${dir}")")"
+	[[ -n "${account}" ]] || account="$(git_account_for_owner "$(owner_from_url "${url}")" "$(get_tmux_option "@git_revamped_gh_accounts" "")")"
+	[[ -n "${account}" ]] || return 0
+	token="$(_gh_token_for "${account}")"
+	[[ -n "${token}" ]] && export GH_TOKEN="${token}"
+	return 0
+}
+
+_git_web_count() {
+	local kind="${1}" value="${2}"
+	[[ "${value}" =~ ^[0-9]+$ ]] || value=0
+	if ((value == 0)) && [[ "$(get_tmux_option "@git_revamped_web_zero" "1")" == "0" ]]; then
+		return 0
+	fi
+	echo " $(git_render_count "${kind}" "${value}")"
+}
+
+_git_web_counts() {
+	local dir="${1}" provider="${2}" pr review issue bug=0 total
 	if [[ "${provider}" == "github" ]] && has_command gh; then
 		pr="$(_gh_pr_count)"
 		review="$(_gh_review_count)"
@@ -78,11 +107,24 @@ git_web_segment() {
 	else
 		return 0
 	fi
-	[[ "${pr}" =~ ^[0-9]+$ ]] || pr=0
-	[[ "${review}" =~ ^[0-9]+$ ]] || review=0
-	[[ "${issue}" =~ ^[0-9]+$ ]] || issue=0
-	[[ "${bug}" =~ ^[0-9]+$ ]] || bug=0
-	echo " $(git_render_count pr "${pr}") $(git_render_count review "${review}") $(git_render_count issue "${issue}") $(git_render_count bug "${bug}")$(git_ci_segment "${dir}" "${provider}")"
+	echo "$(_git_web_count pr "${pr}")$(_git_web_count review "${review}")$(_git_web_count issue "${issue}")$(_git_web_count bug "${bug}")$(git_ci_segment "${dir}" "${provider}")"
+}
+
+git_web_interval() {
+	local value
+	value="$(get_tmux_option "@git_revamped_web_interval" "300")"
+	[[ "${value}" =~ ^[0-9]+$ ]] || value=300
+	echo "${value}"
+}
+
+git_web_refresh() {
+	cache_set "${2}" "$(git_web_segment "${1}")"
+}
+
+git_web_cached() {
+	local key
+	key="web_$(_git_key "${1}")"
+	cache_render "${key}" "$(git_web_interval)" git_web_refresh "${1}" "${key}"
 }
 
 # git_build_status DIR -> the full formatted status string.
@@ -191,7 +233,7 @@ git_build_status() {
 	fi
 
 	if [[ "$(get_tmux_option "@git_revamped_web" "0")" == "1" ]]; then
-		out="${out}$(git_web_segment "${dir}")"
+		out="${out}$(git_web_cached "${dir}")"
 	fi
 
 	echo "${out}"

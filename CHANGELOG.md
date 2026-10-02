@@ -12,8 +12,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@git_revamped_before` and `@git_revamped_after`, placed around the status
   and the branch only when there is something to show, so a theme can draw a
   pill that disappears outside a repository.
+- `@git_revamped_web_interval`, a separate cache for the provider segment, 300
+  seconds by default, so the GitHub and GitLab APIs are not called on every
+  five-second status refresh.
+- `@git_revamped_web_zero`. Setting it to `0` hides provider counts that are
+  zero.
+- The provider segment speaks to GitHub as the account the project names: the
+  login in its `user.email` noreply address, then the `@git_revamped_gh_accounts`
+  owner map, then the active `gh` account.
 - `@git_revamped_reset`, the style that closes every segment. It defaults to
   `#[default]` as before; a plain foreground keeps the background a pill set.
+
+### Fixed
+
+- The provider calls ran in the status worker's working directory rather than
+  the repository's, so `gh` and `glab` counted another repository or nothing at
+  all. They now run inside the repository of the active pane.
+- A remote using an SSH host alias, such as `git@github-work:owner/repo.git`,
+  was not recognised as GitHub or GitLab, so its provider segment never ran.
+  The alias is now resolved through `ssh -G`.
 
 ## [1.2.0] - 2026-06-29
 

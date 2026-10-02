@@ -203,3 +203,70 @@ teardown() {
   run _glab_ci_status
   true
 }
+
+@test "git.sh lib - login comes from a plain noreply email" {
+  run gh_login_from_email "octocat@users.noreply.github.com"
+
+  [[ "${output}" == "octocat" ]]
+}
+
+@test "git.sh lib - login drops the numeric id of a noreply email" {
+  run gh_login_from_email "583231+acme-ci@users.noreply.github.com"
+
+  [[ "${output}" == "acme-ci" ]]
+}
+
+@test "git.sh lib - a regular email names no login" {
+  run gh_login_from_email "someone@example.com"
+
+  [ -z "${output}" ]
+}
+
+@test "git.sh lib - owner and host come from an scp-like url" {
+  [[ "$(owner_from_url "git@github-acme:acme-corp/acme_app.git")" == "acme-corp" ]]
+  [[ "$(host_from_url "git@github-acme:acme-corp/acme_app.git")" == "github-acme" ]]
+}
+
+@test "git.sh lib - owner and host come from an https url" {
+  [[ "$(owner_from_url "https://github.com/octocat/hello-world.git")" == "octocat" ]]
+  [[ "$(host_from_url "https://github.com/octocat/hello-world.git")" == "github.com" ]]
+}
+
+@test "git.sh lib - owner and host come from an ssh url" {
+  [[ "$(owner_from_url "ssh://git@github.com/AcmeLabs/api.git")" == "AcmeLabs" ]]
+  [[ "$(host_from_url "ssh://git@github.com/AcmeLabs/api.git")" == "github.com" ]]
+}
+
+@test "git.sh lib - the owner map names the matching account" {
+  run git_account_for_owner "acme-corp" "octocat=octocat acme-corp=acme-bot"
+
+  [[ "${output}" == "acme-bot" ]]
+}
+
+@test "git.sh lib - the owner map names nothing for an unknown owner" {
+  run git_account_for_owner "other" "octocat=octocat"
+
+  [ -z "${output}" ]
+}
+
+@test "git.sh lib - an empty owner names no account" {
+  run git_account_for_owner "" "octocat=octocat"
+
+  [ -z "${output}" ]
+}
+
+@test "git.sh lib - a provider host needs no alias lookup" {
+  _ssh_hostname() { echo "should-not-be-asked"; }
+
+  run git_provider "git@gitlab.com:o/r.git"
+
+  [[ "${output}" == "gitlab" ]]
+}
+
+@test "git.sh lib - an unknown host names no provider" {
+  _ssh_hostname() { echo "192.168.0.2"; }
+
+  run git_provider "git@nas:o/r.git"
+
+  [ -z "${output}" ]
+}
