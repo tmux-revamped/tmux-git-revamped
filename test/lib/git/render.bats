@@ -130,3 +130,20 @@ teardown() {
 
   [[ "${output}" == "main#[fg=white]" ]]
 }
+
+@test "render.sh - an empty CI label leaves the icon alone" {
+  set_tmux_option "@git_revamped_ci_pass_icon" "ok"
+  _git_option_exists() { [[ "${1}" == "@git_revamped_ci_pass_label" ]]; }
+
+  run git_render_ci pass
+
+  [[ "${output}" == "#[fg=green]ok#[default]" ]]
+}
+
+@test "render.sh - an unset CI label falls back to the status" {
+  _git_option_exists() { return 1; }
+
+  run git_render_ci fail
+
+  [[ "${output}" == "#[fg=red]CI fail#[default]" ]]
+}

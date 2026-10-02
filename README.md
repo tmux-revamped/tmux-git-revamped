@@ -107,7 +107,7 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_worktree_{color,icon}` | cyan, `wt` | linked-worktree styling |
 | `@git_revamped_submodule_{color,icon}` | yellow, `sub` | dirty-submodule styling |
 | `@git_revamped_clean_{color,icon}` | green, `ok` | clean-tree styling |
-| `@git_revamped_ci_{pass,fail,pending}_{color,icon,label}` | green/red/yellow, `CI` | CI status styling |
+| `@git_revamped_ci_{pass,fail,pending}_{color,icon,label}` | green/red/yellow, `CI` | CI status styling; a label set to `''` shows the icon alone |
 
 > [!IMPORTANT]
 > The `@git_revamped_web` segment calls the GitHub or GitLab API on every refresh
