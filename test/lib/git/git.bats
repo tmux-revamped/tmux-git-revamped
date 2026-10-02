@@ -203,3 +203,70 @@ teardown() {
   run _glab_ci_status
   true
 }
+
+@test "git.sh lib - login comes from a plain noreply email" {
+  run gh_login_from_email "gufranco@users.noreply.github.com"
+
+  [[ "${output}" == "gufranco" ]]
+}
+
+@test "git.sh lib - login drops the numeric id of a noreply email" {
+  run gh_login_from_email "299237933+gfranco-c-buoy@users.noreply.github.com"
+
+  [[ "${output}" == "gfranco-c-buoy" ]]
+}
+
+@test "git.sh lib - a regular email names no login" {
+  run gh_login_from_email "someone@example.com"
+
+  [ -z "${output}" ]
+}
+
+@test "git.sh lib - owner and host come from an scp-like url" {
+  [[ "$(owner_from_url "git@github-onyx:tsos-tech/onyx_fullstack.git")" == "tsos-tech" ]]
+  [[ "$(host_from_url "git@github-onyx:tsos-tech/onyx_fullstack.git")" == "github-onyx" ]]
+}
+
+@test "git.sh lib - owner and host come from an https url" {
+  [[ "$(owner_from_url "https://github.com/gufranco/maeyomi.git")" == "gufranco" ]]
+  [[ "$(host_from_url "https://github.com/gufranco/maeyomi.git")" == "github.com" ]]
+}
+
+@test "git.sh lib - owner and host come from an ssh url" {
+  [[ "$(owner_from_url "ssh://git@github.com/LineLeap/api.git")" == "LineLeap" ]]
+  [[ "$(host_from_url "ssh://git@github.com/LineLeap/api.git")" == "github.com" ]]
+}
+
+@test "git.sh lib - the owner map names the matching account" {
+  run git_account_for_owner "tsos-tech" "gufranco=gufranco tsos-tech=gfranco-onyxodds"
+
+  [[ "${output}" == "gfranco-onyxodds" ]]
+}
+
+@test "git.sh lib - the owner map names nothing for an unknown owner" {
+  run git_account_for_owner "other" "gufranco=gufranco"
+
+  [ -z "${output}" ]
+}
+
+@test "git.sh lib - an empty owner names no account" {
+  run git_account_for_owner "" "gufranco=gufranco"
+
+  [ -z "${output}" ]
+}
+
+@test "git.sh lib - a provider host needs no alias lookup" {
+  _ssh_hostname() { echo "should-not-be-asked"; }
+
+  run git_provider "git@gitlab.com:o/r.git"
+
+  [[ "${output}" == "gitlab" ]]
+}
+
+@test "git.sh lib - an unknown host names no provider" {
+  _ssh_hostname() { echo "192.168.0.2"; }
+
+  run git_provider "git@nas:o/r.git"
+
+  [ -z "${output}" ]
+}

@@ -176,6 +176,47 @@ relative_time() {
 }
 
 # provider_from_url URL -> github, gitlab, or empty.
+host_from_url() {
+  local url="${1}"
+  url="${url#*://}"
+  url="${url#*@}"
+  url="${url%%[:/]*}"
+  printf '%s' "${url}"
+}
+
+git_provider() {
+  local url="${1}" provider
+  provider="$(provider_from_url "${url}")"
+  [[ -n "${provider}" ]] || provider="$(provider_from_url "$(_ssh_hostname "$(host_from_url "${url}")")")"
+  printf '%s' "${provider}"
+}
+
+owner_from_url() {
+  local url="${1}"
+  url="${url#*://}"
+  url="${url#*@}"
+  url="${url#*[:/]}"
+  printf '%s' "${url%%/*}"
+}
+
+gh_login_from_email() {
+  local email="${1}" suffix="@users.noreply.github.com"
+  [[ "${email}" == *"${suffix}" ]] || return 0
+  email="${email%"${suffix}"}"
+  printf '%s' "${email#*+}"
+}
+
+git_account_for_owner() {
+  local owner="${1}" map="${2}" pair
+  [[ -n "${owner}" ]] || return 0
+  for pair in ${map}; do
+    [[ "${pair%%=*}" == "${owner}" ]] || continue
+    printf '%s' "${pair#*=}"
+    return 0
+  done
+  return 0
+}
+
 provider_from_url() {
   case "${1}" in
     *github.com*) echo "github" ;;
@@ -202,6 +243,9 @@ _gh_pr_count() { gh pr list --json number --jq 'length' 2>/dev/null | head -1 | 
 _gh_review_count() { gh pr status --json reviewRequests --jq '.needsReview | length' 2>/dev/null | head -1 | tr -d '\n '; }
 _gh_issue_count() { gh issue list --assignee @me --json number --jq 'length' 2>/dev/null | head -1 | tr -d '\n '; }
 _gh_bug_count() { gh issue list --assignee @me --json labels --jq '[.[] | select(any(.labels[].name; . == "bug"))] | length' 2>/dev/null | head -1 | tr -d '\n '; }
+_git_user_email() { git -C "${1}" config user.email 2>/dev/null; }
+_ssh_hostname() { [[ -n "${1}" ]] && ssh -G "${1}" 2>/dev/null | awk '$1 == "hostname" { print $2; exit }'; }
+_gh_token_for() { gh auth token --user "${1}" 2>/dev/null; }
 _gh_ci_buckets() { gh pr checks --json bucket --jq '.[].bucket' 2>/dev/null; }
 _glab_mr_count() { glab mr list 2>/dev/null | grep -cE '^!'; }
 # shellcheck disable=SC2120
@@ -213,6 +257,14 @@ _glab_ci_status() { glab ci status </dev/null 2>/dev/null; }
 # is_git_repo DIR -> 0 when DIR is inside a git work tree.
 is_git_repo() { _git_in_repo "${1}"; }
 
+export -f host_from_url
+export -f git_provider
+export -f _ssh_hostname
+export -f owner_from_url
+export -f gh_login_from_email
+export -f _git_user_email
+export -f git_account_for_owner
+export -f _gh_token_for
 export -f parse_branch
 export -f parse_upstream
 export -f parse_ahead

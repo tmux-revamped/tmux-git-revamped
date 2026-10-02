@@ -79,6 +79,9 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_clean` | `0` | set to `1` to show a clean-tree indicator |
 | `@git_revamped_base_branch` | empty | set to a branch like `main` to show commits ahead of that base |
 | `@git_revamped_ci` | `1` | within the web path, set to `0` to hide the CI check status |
+| `@git_revamped_web_interval` | `300` | seconds the provider segment stays cached, separate from `@git_revamped_interval` so the API is not called on every status refresh |
+| `@git_revamped_web_zero` | `1` | set to `0` to hide provider counts that are zero |
+| `@git_revamped_gh_accounts` | empty | space-separated `owner=account` pairs naming the `gh` account for a repository owner, used when the project's `user.email` names none |
 | `@git_revamped_key_lazygit` | empty | key to bind for the lazygit popup, for example `g` |
 | `@git_revamped_key_menu` | empty | key to bind for the branch switcher menu |
 | `@git_revamped_key_browse` | empty | key to bind to open the repo on its provider |
@@ -115,6 +118,8 @@ you can replace with Nerd Font glyphs.
 >
 > The web path also reports the head commit's CI status through `gh pr checks` or
 > `glab ci status`. Set `@git_revamped_ci` to `0` to skip that extra call.
+>
+> The provider calls run inside the repository of the active pane, and each repository speaks to its provider as its own account. On GitHub the account is the login in the project's `user.email` when that is a GitHub noreply address, such as `299237933+octocat@users.noreply.github.com`, then the `@git_revamped_gh_accounts` entry for the repository owner, then the active `gh` account. The account's token comes from `gh auth token --user <account>`, so every account must be logged in to `gh`. GitLab is reached through the host in the repository's remote, so each GitLab instance uses the account `glab` holds for it. An SSH host alias such as `git@github-work:owner/repo.git` is resolved through `ssh -G` to find the provider.
 
 ## Actions and key bindings
 

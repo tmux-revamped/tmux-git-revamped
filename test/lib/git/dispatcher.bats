@@ -11,6 +11,9 @@ setup() {
   _git_status() { printf '## main...origin/main [ahead 2, behind 1]\n M src/a\nM  src/b\n?? new1\n?? new2\n'; }
   _git_numstat() { printf '3\t1\tsrc/a\n4\t0\tsrc/b\n'; }
   _git_branch() { echo "main"; }
+  _git_user_email() { echo ""; }
+  _gh_token_for() { echo ""; }
+  _ssh_hostname() { echo ""; }
 }
 
 teardown() {
@@ -154,7 +157,7 @@ teardown() {
   _gh_issue_count() { echo "4"; }
   _gh_bug_count() { echo "1"; }
   _gh_ci_buckets() { echo ""; }
-  run git_build_status /repo
+  run git_build_status "${BATS_TEST_TMPDIR}"
   [[ "${output}" == *"#[fg=cyan]PR 2#[default]"* ]]
   [[ "${output}" == *"#[fg=magenta]R 1#[default]"* ]]
   [[ "${output}" == *"#[fg=blue]I 3#[default]"* ]]
@@ -170,7 +173,7 @@ teardown() {
   _gh_issue_count() { echo "1"; }
   _gh_bug_count() { echo "3"; }
   _gh_ci_buckets() { echo ""; }
-  run git_web_segment /repo
+  run git_web_segment "${BATS_TEST_TMPDIR}"
   [[ "${output}" == *"#[fg=blue]I 0#[default]"* ]]
   [[ "${output}" == *"#[fg=red]B 3#[default]"* ]]
 }
@@ -188,7 +191,7 @@ teardown() {
   _glab_review_count() { echo "2"; }
   _glab_issue_count() { echo "3"; }
   _glab_ci_status() { echo ""; }
-  run git_web_segment /repo
+  run git_web_segment "${BATS_TEST_TMPDIR}"
   [[ "${output}" == *"#[fg=cyan]PR 5#[default]"* ]]
   [[ "${output}" == *"#[fg=magenta]R 2#[default]"* ]]
   [[ "${output}" == *"#[fg=blue]I 3#[default]"* ]]
@@ -204,7 +207,7 @@ teardown() {
   _gh_issue_count() { echo "0"; }
   _gh_bug_count() { echo "0"; }
   _gh_ci_buckets() { printf 'pass\nfail\n'; }
-  run git_web_segment /repo
+  run git_web_segment "${BATS_TEST_TMPDIR}"
   [[ "${output}" == *"#[fg=red]CI fail#[default]"* ]]
 }
 
@@ -215,7 +218,7 @@ teardown() {
   _glab_review_count() { echo "0"; }
   _glab_issue_count() { echo "0"; }
   _glab_ci_status() { echo "Pipeline running"; }
-  run git_web_segment /repo
+  run git_web_segment "${BATS_TEST_TMPDIR}"
   [[ "${output}" == *"#[fg=yellow]CI pending#[default]"* ]]
 }
 
@@ -228,7 +231,7 @@ teardown() {
   _gh_issue_count() { echo "0"; }
   _gh_bug_count() { echo "0"; }
   _gh_ci_buckets() { printf 'fail\n'; }
-  run git_web_segment /repo
+  run git_web_segment "${BATS_TEST_TMPDIR}"
   [[ "${output}" != *"CI"* ]]
 }
 
@@ -415,4 +418,142 @@ teardown() {
   run git_render_branch_cmd /repo
 
   [[ "${output}" == "<<main#[default]>>" ]]
+}
+
+@test "git.sh dispatcher - provider calls run inside the repository" {
+  _git_remote_url() { echo "https://github.com/o/r"; }
+  has_command() { [[ "$1" == "gh" ]]; }
+  _gh_pr_count() { pwd -P; }
+  _gh_review_count() { echo "0"; }
+  _gh_issue_count() { echo "0"; }
+  _gh_bug_count() { echo "0"; }
+  _gh_ci_buckets() { echo ""; }
+  local repo
+  repo="$(cd "${BATS_TEST_TMPDIR}" && pwd -P)"
+  _git_web_counts() { echo "ran-in:$(pwd -P)"; }
+
+  run git_web_segment "${BATS_TEST_TMPDIR}"
+
+  [[ "${output}" == "ran-in:${repo}" ]]
+}
+
+@test "git.sh dispatcher - provider segment is empty when the directory is gone" {
+  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_web_counts() { echo "should-not-run"; }
+
+  run git_web_segment "${BATS_TEST_TMPDIR}/absent"
+
+  [ "${status}" -eq 0 ]
+  [ -z "${output}" ]
+}
+
+@test "git.sh dispatcher - gh uses the account named by the project email" {
+  _git_remote_url() { echo "git@github-onyx:tsos-tech/r.git"; }
+  _ssh_hostname() { echo "github.com"; }
+  _git_user_email() { echo "299237933+gfranco-c-buoy@users.noreply.github.com"; }
+  _gh_token_for() { echo "token-for-${1}"; }
+  _git_web_counts() { echo "token=${GH_TOKEN:-none}"; }
+
+  run git_web_segment "${BATS_TEST_TMPDIR}"
+
+  [[ "${output}" == "token=token-for-gfranco-c-buoy" ]]
+}
+
+@test "git.sh dispatcher - gh falls back to the owner map without a noreply email" {
+  set_tmux_option "@git_revamped_gh_accounts" "tsos-tech=gfranco-onyxodds gufranco=gufranco"
+  _git_remote_url() { echo "https://github.com/tsos-tech/r"; }
+  _git_user_email() { echo "someone@example.com"; }
+  _gh_token_for() { echo "token-for-${1}"; }
+  _git_web_counts() { echo "token=${GH_TOKEN:-none}"; }
+
+  run git_web_segment "${BATS_TEST_TMPDIR}"
+
+  [[ "${output}" == "token=token-for-gfranco-onyxodds" ]]
+}
+
+@test "git.sh dispatcher - gh keeps the active account when nothing names one" {
+  unset GH_TOKEN
+  _git_remote_url() { echo "https://github.com/someone/r"; }
+  _git_web_counts() { echo "token=${GH_TOKEN:-none}"; }
+
+  run git_web_segment "${BATS_TEST_TMPDIR}"
+
+  [[ "${output}" == "token=none" ]]
+}
+
+@test "git.sh dispatcher - an account without a token keeps the active account" {
+  unset GH_TOKEN
+  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_user_email() { echo "ghost@users.noreply.github.com"; }
+  _git_web_counts() { echo "token=${GH_TOKEN:-none}"; }
+
+  run git_web_segment "${BATS_TEST_TMPDIR}"
+
+  [[ "${output}" == "token=none" ]]
+}
+
+@test "git.sh dispatcher - a host alias resolves to its provider" {
+  _git_remote_url() { echo "git@github-lineleap:LineLeap/api.git"; }
+  _ssh_hostname() { [[ "${1}" == "github-lineleap" ]] && echo "github.com"; }
+  _git_web_counts() { echo "provider=${2}"; }
+
+  run git_web_segment "${BATS_TEST_TMPDIR}"
+
+  [[ "${output}" == "provider=github" ]]
+}
+
+@test "git.sh dispatcher - zero provider counts can be hidden" {
+  set_tmux_option "@git_revamped_web_zero" "0"
+  set_tmux_option "@git_revamped_ci" "0"
+  _git_remote_url() { echo "https://github.com/o/r"; }
+  has_command() { [[ "$1" == "gh" ]]; }
+  _gh_pr_count() { echo "2"; }
+  _gh_review_count() { echo "0"; }
+  _gh_issue_count() { echo "0"; }
+  _gh_bug_count() { echo "0"; }
+
+  run git_web_segment "${BATS_TEST_TMPDIR}"
+
+  [[ "${output}" == " #[fg=cyan]PR 2#[default]" ]]
+}
+
+@test "git.sh dispatcher - zero provider counts show by default" {
+  set_tmux_option "@git_revamped_ci" "0"
+  _git_remote_url() { echo "https://github.com/o/r"; }
+  has_command() { [[ "$1" == "gh" ]]; }
+  _gh_pr_count() { echo "0"; }
+  _gh_review_count() { echo "0"; }
+  _gh_issue_count() { echo "0"; }
+  _gh_bug_count() { echo "0"; }
+
+  run git_web_segment "${BATS_TEST_TMPDIR}"
+
+  [[ "${output}" == *"PR 0"* ]]
+  [[ "${output}" == *"B 0"* ]]
+}
+
+@test "git.sh dispatcher - provider interval defaults to five minutes" {
+  run git_web_interval
+
+  [[ "${output}" == "300" ]]
+}
+
+@test "git.sh dispatcher - an invalid provider interval falls back to the default" {
+  set_tmux_option "@git_revamped_web_interval" "soon"
+
+  run git_web_interval
+
+  [[ "${output}" == "300" ]]
+}
+
+@test "git.sh dispatcher - the provider segment is cached under its own key" {
+  set_tmux_option "@git_revamped_web" "1"
+  local calls="${BATS_TEST_TMPDIR}/calls"
+  git_web_segment() { echo x >>"${calls}"; echo " #[fg=cyan]PR 1#[default]"; }
+
+  git_build_status /repo >/dev/null
+  git_build_status /repo >/dev/null
+
+  run wc -l <"${calls}"
+  [[ "${output// /}" == "1" ]]
 }
