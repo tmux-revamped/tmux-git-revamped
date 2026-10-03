@@ -56,3 +56,12 @@ teardown() {
 
   [[ "$(cat "$(_mock_opt_file @git_revamped_published)")" == "branch" ]]
 }
+
+@test "entry - a second run keeps metrics already turned into option reads" {
+  tmux set-option -gq "@git_revamped_render" "options"
+  tmux set-option -gq "status-right" "[#{E:@git_revamped_out_status}]"
+
+  bash "${ENTRY}"
+
+  [[ "$(cat "$(_mock_opt_file @git_revamped_published)")" == "status" ]]
+}
