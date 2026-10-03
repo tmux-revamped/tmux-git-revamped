@@ -328,7 +328,7 @@ git_publish() {
 _git_reexec() { exec "${PLUGIN_DIR}/src/git.sh" daemon; }
 
 git_daemon() {
-	if ticker_run git_revamped git_publish "$$"; then
+	if ticker_run git_revamped git_publish "$$" 5; then
 		_git_reexec
 	fi
 }
