@@ -124,7 +124,7 @@ you can replace with Nerd Font glyphs.
 
 ## Render mode
 
-By default `#{git}` becomes a `#()` call keyed by the active pane's path, so tmux starts a new job, which renders empty until it finishes, whenever the foreground process works in another directory. Set `@git_revamped_render` to `options` and `#{git}` becomes `#{E:@git_revamped_out_status}` instead. One background process per server walks every pane every `status-interval` seconds and writes each pane's value as a pane option, so switching panes shows that pane's repository at once. A pane whose current directory is not a repository keeps the last value it showed. The process exits after its current tick when the server stops, and a config reload replaces it.
+By default `#{git}` becomes a `#()` call keyed by the active pane's path, so tmux starts a new job, which renders empty until it finishes, whenever the foreground process works in another directory. Set `@git_revamped_render` to `options` and `#{git}` becomes `#{E:@git_revamped_out_status}` instead. One background process per server walks every pane every `@git_revamped_interval` seconds, 5 by default, and writes each pane's value as a pane option, so switching panes shows that pane's repository at once. A pane whose current directory is not a repository keeps the last value it showed. The process exits after its current tick when the server stops, and a config reload replaces it.
 
 ```tmux
 set -g @git_revamped_render 'options'

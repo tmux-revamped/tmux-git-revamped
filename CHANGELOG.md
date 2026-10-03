@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `@git_revamped_render 'options'` replaces the `#()` calls with pane option
   reads, written for every pane by one background process per server every
-  `status-interval` seconds. A pane outside a repository keeps its last value,
+  `@git_revamped_interval` seconds, 5 by default. A pane outside a repository keeps its last value,
   so the pill no longer blinks when a program works in another directory.
 - `@git_revamped_icons`, a default icon set for every segment. `ascii` keeps
   the plain characters; `nerd` uses Nerd Font glyphs. A per-segment icon option
@@ -31,6 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   owner map, then the active `gh` account.
 - `@git_revamped_reset`, the style that closes every segment. It defaults to
   `#[default]` as before; a plain foreground keeps the background a pill set.
+
+### Changed
+
+- The options-mode background process reads every option it needs in one tmux
+  call per tick, sends its cache writes and published values in a second, and
+  keeps its functions out of the environment of the commands it runs. Options
+  mode ticks every `@git_revamped_interval` seconds.
 
 ### Fixed
 
