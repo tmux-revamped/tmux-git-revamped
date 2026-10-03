@@ -39,7 +39,7 @@ interpolate() {
 used_metrics() {
   local text="${1}" used="" i
   for (( i = 0; i < ${#placeholders[@]}; i++ )); do
-    if [[ "${text}" == *${placeholders[i]}* ]]; then
+    if [[ "${text}" == *${placeholders[i]}* || "${text}" == *"@git_revamped_out_${metrics[i]}}"* ]]; then
       used="${used:+${used} }${metrics[i]}"
     fi
   done

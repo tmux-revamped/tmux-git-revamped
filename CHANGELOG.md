@@ -41,6 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- In options mode, running the entry point a second time, as two overlapping
+  config reloads do, found no placeholders left in the status line and
+  published nothing, which froze every value. A metric whose option read is
+  already on the status line now counts as used.
 - The worktree and clean flags printed their text twice, as `wt wt` and
   `ok ok`. They now render their icon once.
 - The status and branch jobs passed the pane path unquoted, so a repository
