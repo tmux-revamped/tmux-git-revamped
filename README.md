@@ -122,6 +122,14 @@ you can replace with Nerd Font glyphs.
 >
 > The provider calls run inside the repository of the active pane, and each repository speaks to its provider as its own account. On GitHub the account is the login in the project's `user.email` when that is a GitHub noreply address, such as `299237933+octocat@users.noreply.github.com`, then the `@git_revamped_gh_accounts` entry for the repository owner, then the active `gh` account. The account's token comes from `gh auth token --user <account>`, so every account must be logged in to `gh`. GitLab is reached through the host in the repository's remote, so each GitLab instance uses the account `glab` holds for it. An SSH host alias such as `git@github-work:owner/repo.git` is resolved through `ssh -G` to find the provider.
 
+## Render mode
+
+By default `#{git}` becomes a `#()` call keyed by the active pane's path, so tmux starts a new job, which renders empty until it finishes, whenever the foreground process works in another directory. Set `@git_revamped_render` to `options` and `#{git}` becomes `#{E:@git_revamped_out_status}` instead. One background process per server walks every pane every `status-interval` seconds and writes each pane's value as a pane option, so switching panes shows that pane's repository at once. A pane whose current directory is not a repository keeps the last value it showed. The process exits after its current tick when the server stops, and a config reload replaces it.
+
+```tmux
+set -g @git_revamped_render 'options'
+```
+
 ## Icon sets
 
 `@git_revamped_icons` picks the default icon of every segment at once. `ascii`, the default, works in any font. `nerd` needs a [Nerd Font](https://www.nerdfonts.com) and uses these glyphs:

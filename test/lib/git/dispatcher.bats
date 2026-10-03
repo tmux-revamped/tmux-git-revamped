@@ -557,3 +557,93 @@ teardown() {
   run wc -l <"${calls}"
   [[ "${output// /}" == "1" ]]
 }
+
+@test "git.sh dispatcher - publish writes a value for each pane in a repository" {
+  export PUBLISH_LOG="${TEST_TMPDIR}/publish.log"
+  _publish_tmux() { [[ "${1}" == "list-clients" ]] && return 0; printf '%s\n' "$@" > "${PUBLISH_LOG}"; }
+  _git_pane_list() { printf '%%1\t/repo/a\n%%2\t/repo/b\n'; }
+  git_value_for() { printf '%s@%s' "${1}" "${2}"; }
+  set_tmux_option "@git_revamped_published" "status"
+
+  git_publish
+
+  [[ "$(paste -sd'|' "${PUBLISH_LOG}")" == "set-option|-pq|-t|%1|@git_revamped_out_status|status@/repo/a|;|set-option|-pq|-t|%2|@git_revamped_out_status|status@/repo/b" ]]
+}
+
+@test "git.sh dispatcher - publish leaves a pane outside a repository untouched" {
+  export PUBLISH_LOG="${TEST_TMPDIR}/publish.log"
+  _publish_tmux() { [[ "${1}" == "list-clients" ]] && return 0; printf '%s\n' "$@" > "${PUBLISH_LOG}"; }
+  _git_pane_list() { printf '%%1\t/tmp\n'; }
+  is_git_repo() { return 1; }
+  set_tmux_option "@git_revamped_published" "status"
+
+  git_publish
+
+  [ ! -f "${PUBLISH_LOG}" ]
+}
+
+@test "git.sh dispatcher - value_for branch matches the branch renderer" {
+  local expected
+  expected="$(git_render_branch_cmd "${TEST_TMPDIR}")"
+
+  run git_value_for branch "${TEST_TMPDIR}"
+
+  [[ "${output}" == "${expected}" ]]
+}
+
+@test "git.sh dispatcher - value_for status matches the status renderer" {
+  local expected
+  expected="$(git_render_status "${TEST_TMPDIR}")"
+
+  run git_value_for status "${TEST_TMPDIR}"
+
+  [[ "${output}" == "${expected}" ]]
+}
+
+@test "git.sh dispatcher - value_for ignores an unknown metric" {
+  run git_value_for unknown "${TEST_TMPDIR}"
+
+  [ -z "${output}" ]
+}
+
+@test "git.sh dispatcher - the daemon re-executes after the tick limit" {
+  ticker_run() { return 0; }
+  _git_reexec() { echo "reexec" > "${TEST_TMPDIR}/reexec"; }
+
+  git_daemon
+
+  [[ "$(cat "${TEST_TMPDIR}/reexec")" == "reexec" ]]
+}
+
+@test "git.sh dispatcher - the daemon stops when it loses ownership" {
+  ticker_run() { return 1; }
+  _git_reexec() { echo "reexec" > "${TEST_TMPDIR}/reexec"; }
+
+  git_daemon
+
+  [ ! -f "${TEST_TMPDIR}/reexec" ]
+}
+
+@test "git.sh dispatcher - main daemon runs the ticker" {
+  git_daemon() { echo "daemon" > "${TEST_TMPDIR}/daemon"; }
+
+  main daemon
+
+  [[ "$(cat "${TEST_TMPDIR}/daemon")" == "daemon" ]]
+}
+
+@test "git.sh dispatcher - main start spawns the daemon" {
+  _ticker_spawn() { printf '%s' "${1}" > "${TEST_TMPDIR}/spawn"; }
+
+  main start
+
+  [[ "$(cat "${TEST_TMPDIR}/spawn")" == *"/src/git.sh" ]]
+}
+
+@test "git.sh dispatcher - the pane list asks tmux for every pane" {
+  tmux() { printf '%s\n' "$@" > "${TEST_TMPDIR}/tmux_args"; }
+
+  _git_pane_list
+
+  [[ "$(head -1 "${TEST_TMPDIR}/tmux_args")" == "list-panes" ]]
+}
