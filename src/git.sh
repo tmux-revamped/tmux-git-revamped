@@ -25,6 +25,10 @@ source "${PLUGIN_DIR}/src/lib/tmux/tmux-ops.sh"
 # shellcheck source=/dev/null
 source "${PLUGIN_DIR}/src/lib/utils/cache.sh"
 # shellcheck source=/dev/null
+source "${PLUGIN_DIR}/src/lib/utils/publish.sh"
+# shellcheck source=/dev/null
+source "${PLUGIN_DIR}/src/lib/utils/ticker.sh"
+# shellcheck source=/dev/null
 source "${PLUGIN_DIR}/src/lib/git/git.sh"
 # shellcheck source=/dev/null
 source "${PLUGIN_DIR}/src/lib/git/render.sh"
@@ -297,6 +301,38 @@ git_render_branch_cmd() {
 	git_wrap "$(git_render_branch "$(truncate_branch "${branch}" "$(get_tmux_option "@git_revamped_max_branch" "25")")")"
 }
 
+_git_pane_list() {
+	tmux list-panes -a -F "#{pane_id}	#{pane_current_path}" 2>/dev/null
+}
+
+git_value_for() {
+	case "${1}" in
+	status) CACHE_SYNC=1 git_render_status "${2}" ;;
+	branch) git_render_branch_cmd "${2}" ;;
+	*) return 0 ;;
+	esac
+}
+
+git_publish() {
+	local pane dir metric
+	while IFS=$'\t' read -r pane dir; do
+		[[ -n "${pane}" && -n "${dir}" ]] || continue
+		is_git_repo "${dir}" || continue
+		for metric in $(get_tmux_option "@git_revamped_published" ""); do
+			publish_add "@git_revamped_out_${metric}" "$(git_value_for "${metric}" "${dir}")" "${pane}"
+		done
+	done <<<"$(_git_pane_list)"
+	publish_commit
+}
+
+_git_reexec() { exec "${PLUGIN_DIR}/src/git.sh" daemon; }
+
+git_daemon() {
+	if ticker_run git_revamped git_publish "$$"; then
+		_git_reexec
+	fi
+}
+
 main() {
 	local cmd="${1:-}" dir="${2:-}"
 
@@ -313,6 +349,8 @@ main() {
 	checkout) git_action_checkout "${dir}" "${3:-}" ;;
 	browse) git_action_browse "${dir}" ;;
 	doctor) git_doctor "${dir}" ;;
+	start) ticker_start "${PLUGIN_DIR}/src/git.sh" ;;
+	daemon) git_daemon ;;
 	*) return 0 ;;
 	esac
 }

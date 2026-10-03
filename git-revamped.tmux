@@ -15,18 +15,35 @@ placeholders=(
   "\#{git_branch}"
 )
 
-commands=(
-  "#(${GIT_CMD} status '#{pane_current_path}')"
-  "#(${GIT_CMD} branch '#{pane_current_path}')"
-)
+metrics=(status branch)
+
+render_mode="$(tmux show-option -gqv "@git_revamped_render")"
+
+target_for() {
+  if [[ "${render_mode}" == "options" ]]; then
+    printf '#{E:@git_revamped_out_%s}' "${1}"
+  else
+    printf "#(%s %s '#{pane_current_path}')" "${GIT_CMD}" "${1}"
+  fi
+}
 
 interpolate() {
   local value="${1}"
   local i
   for (( i = 0; i < ${#placeholders[@]}; i++ )); do
-    value="${value//${placeholders[i]}/${commands[i]}}"
+    value="${value//${placeholders[i]}/$(target_for "${metrics[i]}")}"
   done
   echo "${value}"
+}
+
+used_metrics() {
+  local text="${1}" used="" i
+  for (( i = 0; i < ${#placeholders[@]}; i++ )); do
+    if [[ "${text}" == *${placeholders[i]}* ]]; then
+      used="${used:+${used} }${metrics[i]}"
+    fi
+  done
+  echo "${used}"
 }
 
 update_option() {
@@ -51,8 +68,15 @@ bind_action_key() {
 
 chmod +x "${GIT_CMD}" 2>/dev/null || true
 
+status_text="$(tmux show-option -gqv status-left) $(tmux show-option -gqv status-right)"
+tmux set-option -gq "@git_revamped_published" "$(used_metrics "${status_text}")"
+
 update_option "status-left"
 update_option "status-right"
+
+if [[ "${render_mode}" == "options" ]]; then
+  "${GIT_CMD}" start 2>/dev/null || true
+fi
 
 bind_action_key "@git_revamped_key_lazygit" "lazygit"
 bind_action_key "@git_revamped_key_menu" "menu" "M-v"

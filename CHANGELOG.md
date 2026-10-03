@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `@git_revamped_render 'options'` replaces the `#()` calls with pane option
+  reads, written for every pane by one background process per server every
+  `status-interval` seconds. A pane outside a repository keeps its last value,
+  so the pill no longer blinks when a program works in another directory.
 - `@git_revamped_icons`, a default icon set for every segment. `ascii` keeps
   the plain characters; `nerd` uses Nerd Font glyphs. A per-segment icon option
   still overrides it.
