@@ -20,7 +20,7 @@ teardown() {
 
   bash "${ENTRY}"
 
-  [[ "$(cat "$(_mock_opt_file status-right)")" == "[#($(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/src/git.sh status '#{pane_current_path}')]" ]]
+  [[ "$(cat "$(_mock_opt_file status-right)")" == "[#($(cd "${BATS_TEST_DIRNAME}/../.." && pwd)/src/git.sh status #{q:pane_current_path})]" ]]
 }
 
 @test "entry - options mode turns a placeholder into an option read" {
@@ -93,8 +93,31 @@ teardown() {
   job="${job%)}"
 
   # Act
-  run sh -c "${job//\#\{pane_current_path\}/${TEST_TMPDIR}}"
+  run sh -c "${job//\#\{q:pane_current_path\}/${TEST_TMPDIR}}"
 
   # Assert
   [[ "${output}" == "ran status" ]]
+}
+
+@test "entry - a pane path holding a quote cannot break out of the status job" {
+  # Arrange
+  local root="${TEST_TMPDIR}/plugin"
+  local pane="${TEST_TMPDIR}/it's; touch pwned"
+  mkdir -p "${root}/src"
+  cp "${ENTRY}" "${root}/git-revamped.tmux"
+  printf '#!/bin/sh\nprintf "%%s|%%s" "$1" "$2"\n' > "${root}/src/git.sh"
+  chmod +x "${root}/src/git.sh"
+  tmux set-option -gq "status-right" "#{git}"
+  bash "${root}/git-revamped.tmux"
+  local job
+  job="$(cat "$(_mock_opt_file status-right)")"
+  job="${job#\#(}"
+  job="${job%)}"
+
+  # Act
+  run sh -c "cd \"${TEST_TMPDIR}\" && ${job//\#\{q:pane_current_path\}/$(printf '%q' "${pane}")}"
+
+  # Assert
+  [ ! -e "${TEST_TMPDIR}/pwned" ]
+  [[ "${output}" == "status|${pane}" ]]
 }

@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A directory name holding a `'` could end the quoting around the pane path in
+  the status job and the key bindings and run the rest as a command. The path
+  is now passed through tmux's `#{q:}` shell quoting.
 - A plugin directory whose path holds a space or a `'` broke the status job and
   the key bindings, because the path went into the command unquoted. It is now
   shell-quoted, with any `#` doubled for tmux.

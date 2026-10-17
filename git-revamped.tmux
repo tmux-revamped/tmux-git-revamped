@@ -31,7 +31,7 @@ target_for() {
   if [[ "${render_mode}" == "options" ]]; then
     printf '#{E:@git_revamped_out_%s}' "${1}"
   else
-    printf "#(%s %s '#{pane_current_path}')" "${GIT_CMD_WORD}" "${1}"
+    printf '#(%s %s #{q:pane_current_path})' "${GIT_CMD_WORD}" "${1}"
   fi
 }
 
@@ -80,7 +80,7 @@ bind_action_key() {
     key="${fallback}"
   fi
   [[ -z "${key}" ]] && return 0
-  tmux bind-key "${key}" run-shell "${GIT_CMD_WORD} ${subcommand} '#{pane_current_path}'"
+  tmux bind-key "${key}" run-shell "${GIT_CMD_WORD} ${subcommand} #{q:pane_current_path}"
 }
 
 chmod +x "${GIT_CMD}" 2>/dev/null || true
