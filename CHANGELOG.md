@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A plugin directory whose path holds a space or a `'` broke the status job and
+  the key bindings, because the path went into the command unquoted. It is now
+  shell-quoted, with any `#` doubled for tmux.
 - Switching `@git_revamped_render` away from `options` and reloading left the
   background process running forever. The entry point now clears the ticker
   ownership, so that process sees it no longer owns the ticker and exits.

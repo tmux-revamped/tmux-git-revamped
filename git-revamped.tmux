@@ -10,6 +10,14 @@
 PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GIT_CMD="${PLUGIN_DIR}/src/git.sh"
 
+shell_word() {
+  local hash="#" quoted
+  quoted="$(printf '%q' "${1}")"
+  printf '%s' "${quoted//"${hash}"/${hash}${hash}}"
+}
+
+GIT_CMD_WORD="$(shell_word "${GIT_CMD}")"
+
 placeholders=(
   "\#{git}"
   "\#{git_branch}"
@@ -23,15 +31,24 @@ target_for() {
   if [[ "${render_mode}" == "options" ]]; then
     printf '#{E:@git_revamped_out_%s}' "${1}"
   else
-    printf "#(%s %s '#{pane_current_path}')" "${GIT_CMD}" "${1}"
+    printf "#(%s %s '#{pane_current_path}')" "${GIT_CMD_WORD}" "${1}"
   fi
+}
+
+replace_literal() {
+  local text="${1}" pattern="${2}" replacement="${3}" out=""
+  while [[ -n "${pattern}" && "${text}" == *"${pattern}"* ]]; do
+    out="${out}${text%%"${pattern}"*}${replacement}"
+    text="${text#*"${pattern}"}"
+  done
+  printf '%s' "${out}${text}"
 }
 
 interpolate() {
   local value="${1}"
   local i
   for (( i = 0; i < ${#placeholders[@]}; i++ )); do
-    value="${value//${placeholders[i]}/$(target_for "${metrics[i]}")}"
+    value="$(replace_literal "${value}" "${placeholders[i]#\\}" "$(target_for "${metrics[i]}")")"
   done
   echo "${value}"
 }
@@ -63,7 +80,7 @@ bind_action_key() {
     key="${fallback}"
   fi
   [[ -z "${key}" ]] && return 0
-  tmux bind-key "${key}" run-shell "${GIT_CMD} ${subcommand} '#{pane_current_path}'"
+  tmux bind-key "${key}" run-shell "${GIT_CMD_WORD} ${subcommand} '#{pane_current_path}'"
 }
 
 chmod +x "${GIT_CMD}" 2>/dev/null || true

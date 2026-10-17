@@ -77,3 +77,24 @@ teardown() {
   # Assert
   [ ! -f "$(_mock_opt_file @git_revamped_ticker_pid)" ]
 }
+
+@test "entry - a plugin path with a space and a quote runs as one word" {
+  # Arrange
+  local root="${TEST_TMPDIR}/it's a plugin"
+  mkdir -p "${root}/src"
+  cp "${ENTRY}" "${root}/git-revamped.tmux"
+  printf '#!/bin/sh\nprintf "ran %%s" "$1"\n' > "${root}/src/git.sh"
+  chmod +x "${root}/src/git.sh"
+  tmux set-option -gq "status-right" "#{git}"
+  bash "${root}/git-revamped.tmux"
+  local job
+  job="$(cat "$(_mock_opt_file status-right)")"
+  job="${job#\#(}"
+  job="${job%)}"
+
+  # Act
+  run sh -c "${job//\#\{pane_current_path\}/${TEST_TMPDIR}}"
+
+  # Assert
+  [[ "${output}" == "ran status" ]]
+}
