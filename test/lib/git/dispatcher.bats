@@ -571,7 +571,7 @@ wait_for_path() {
 @test "git.sh dispatcher - publish writes a value for each pane in a repository" {
   export PUBLISH_LOG="${TEST_TMPDIR}/publish.log"
   _publish_tmux() { [[ "${1}" == "list-clients" ]] && return 0; printf '%s\n' "$@" > "${PUBLISH_LOG}"; }
-  _git_pane_list() { printf '%%1\t/repo/a\n%%2\t/repo/b\n'; }
+  _git_pane_list() { printf '%%1|/repo/a\n%%2|/repo/b\n'; }
   git_value_for() { printf '%s@%s' "${1}" "${2}"; }
   set_tmux_option "@git_revamped_published" "status"
 
@@ -583,7 +583,7 @@ wait_for_path() {
 @test "git.sh dispatcher - publish leaves a pane outside a repository untouched" {
   export PUBLISH_LOG="${TEST_TMPDIR}/publish.log"
   _publish_tmux() { [[ "${1}" == "list-clients" ]] && return 0; printf '%s\n' "$@" > "${PUBLISH_LOG}"; }
-  _git_pane_list() { printf '%%1\t/tmp\n'; }
+  _git_pane_list() { printf '%%1|/tmp\n'; }
   is_git_repo() { return 1; }
   set_tmux_option "@git_revamped_published" "status"
 
@@ -742,4 +742,31 @@ wait_for_path() {
 
   # Assert
   [[ "${output}" =~ ^status_[0-9]+_[0-9]+$ ]]
+}
+
+@test "git.sh dispatcher - publish keeps a pane path that starts with a tab" {
+  # Arrange
+  export PUBLISH_LOG="${TEST_TMPDIR}/publish.log"
+  _publish_tmux() { [[ "${1}" == "list-clients" ]] && return 0; printf '%s\n' "$@" > "${PUBLISH_LOG}"; }
+  _git_pane_list() { printf '%%1|\t/repo/a\n'; }
+  is_git_repo() { return 0; }
+  git_value_for() { printf '%s@%s' "${1}" "${2}"; }
+  set_tmux_option "@git_revamped_published" "status"
+
+  # Act
+  git_publish
+
+  # Assert
+  [[ "$(sed -n 6p "${PUBLISH_LOG}")" == "status@"$'\t'"/repo/a" ]]
+}
+
+@test "git.sh dispatcher - the pane list separates fields with a pipe" {
+  # Arrange
+  tmux() { printf '%s\n' "$@" > "${TEST_TMPDIR}/tmux_args"; }
+
+  # Act
+  _git_pane_list
+
+  # Assert
+  [[ "$(sed -n 4p "${TEST_TMPDIR}/tmux_args")" == "#{pane_id}|#{pane_current_path}" ]]
 }
