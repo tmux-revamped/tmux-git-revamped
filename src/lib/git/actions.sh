@@ -1,10 +1,4 @@
 #!/usr/bin/env bash
-#
-# actions.sh: interactive actions bound to keys, never run under the status
-# render. Every tmux call routes through the single _tmux seam and every external
-# tool call routes through its own seam, so tests exercise the logic without ever
-# launching lazygit, opening a browser, or driving a real tmux. Each action
-# feature-detects its tool and only acts when the pane is inside a repository.
 
 [[ -n "${_GIT_REVAMPED_ACTIONS_LOADED:-}" ]] && return 0
 _GIT_REVAMPED_ACTIONS_LOADED=1
@@ -17,16 +11,12 @@ source "${_GIT_ACTIONS_DIR}/../utils/constants.sh"
 # shellcheck source=/dev/null
 source "${_GIT_ACTIONS_DIR}/git.sh"
 
-# Path of the dispatcher used by menu entries to run subcommands. Overridable.
 GIT_ACTION_CMD="${GIT_ACTION_CMD:-${_GIT_ACTIONS_DIR}/../../git.sh}"
 
-# _tmux ARGS -> the single tmux seam every action routes through. Tests mock it.
 _tmux() { tmux "$@"; }
 
-# _tmux_version -> the running tmux version number, like 3.4.
 _tmux_version() { _tmux -V 2>/dev/null | awk '{print $2}'; }
 
-# tmux_has_popup VERSION -> 0 when VERSION supports display-popup, tmux 3.2+.
 tmux_has_popup() {
   local v="${1}" major minor
   v="${v//[!0-9.]/}"
@@ -41,7 +31,6 @@ tmux_has_popup() {
   return 1
 }
 
-# Interactive-tool seams. Tests mock these so nothing launches.
 _git_is_clean() { [[ -z "$(git -C "${1}" --no-optional-locks status --porcelain 2>/dev/null)" ]]; }
 _git_branch_list() { git -C "${1}" --no-optional-locks for-each-ref --format='%(refname:short)' refs/heads/ 2>/dev/null; }
 _git_checkout() { git -C "${1}" checkout "${2}" >/dev/null 2>&1; }
@@ -58,8 +47,6 @@ _glab_browse() {
   ) >/dev/null 2>&1
 }
 
-# git_action_lazygit DIR -> open lazygit rooted at DIR. Uses a popup on tmux 3.2+
-# and a new window otherwise. No-op when DIR is not a repo or lazygit is absent.
 git_action_lazygit() {
   local dir="${1}"
   is_git_repo "${dir}" || return 0
@@ -95,8 +82,6 @@ _git_menu_command() {
   printf 'run-shell "%s"' "${out}"
 }
 
-# git_action_menu DIR -> show a branch-checkout menu for DIR. Refuses when the
-# tree is dirty so an in-flight change is never clobbered. No-op outside a repo.
 git_action_menu() {
   local dir="${1}"
   is_git_repo "${dir}" || return 0
@@ -121,7 +106,6 @@ EOF
   _tmux display-menu -T "git branches" "${args[@]}"
 }
 
-# git_action_checkout DIR BRANCH -> check out BRANCH in DIR through the seam.
 git_action_checkout() {
   local dir="${1}" branch="${2}"
   is_git_repo "${dir}" || return 0
@@ -129,8 +113,6 @@ git_action_checkout() {
   _git_checkout "${dir}" "${branch}"
 }
 
-# git_action_browse DIR -> open the current repo on its provider in a browser via
-# the provider CLI. No-op when the provider or its CLI is unavailable.
 git_action_browse() {
   local dir="${1}" url provider
   is_git_repo "${dir}" || return 0
@@ -151,7 +133,6 @@ _doctor_tool() {
   fi
 }
 
-# git_doctor DIR -> a plain-text capability report explaining what was detected.
 git_doctor() {
   local dir="${1:-${PWD}}"
   echo "tmux-git-revamped doctor"
