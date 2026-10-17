@@ -31,7 +31,7 @@ make_repo() {
 
   run tmux show-option -gv status-right
 
-  [[ "${output}" == *"status '#{pane_current_path}')"* ]]
+  [[ "${output}" == *"status #{q:pane_current_path})"* ]]
 }
 
 @test "entrypoint - the branch job quotes the pane path" {
@@ -39,7 +39,7 @@ make_repo() {
 
   run tmux show-option -gv status-left
 
-  [[ "${output}" == *"branch '#{pane_current_path}')"* ]]
+  [[ "${output}" == *"branch #{q:pane_current_path})"* ]]
 }
 
 @test "entrypoint - a repository whose path holds a space renders its branch" {
@@ -49,7 +49,23 @@ make_repo() {
   local job
   job="$(status_job status-left)"
 
-  run sh -c "${job//\#\{pane_current_path\}/${repo}}"
+  run sh -c "${job//\#\{q:pane_current_path\}/$(printf '%q' "${repo}")}"
 
+  [[ "${output}" == *"trunk"* ]]
+}
+
+@test "entrypoint - a pane path holding a quote renders its branch" {
+  # Arrange
+  local repo="${BATS_TEST_TMPDIR}/it's here/repo"
+  make_repo "${repo}"
+  tmux new-window -d -t test:9 -c "${repo}" 'sleep 30'
+  bash "${PLUGIN_DIR}/git-revamped.tmux"
+  local job
+  job="$(tmux display-message -p -t test:9 "$(status_job status-left)")"
+
+  # Act
+  run sh -c "${job}"
+
+  # Assert
   [[ "${output}" == *"trunk"* ]]
 }
