@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A stalled GitHub or GitLab call could freeze the options-mode background
+  process, because the provider segment ran inline with no time limit. It is
+  now stopped after 10 seconds, and the last provider value stays on screen.
 - Pull request, issue, and merge request counts stopped at 30, the default
   page size of `gh` and `glab`. GitHub lists now ask for up to 1000 items, and
   GitLab lists read up to ten pages of 100.

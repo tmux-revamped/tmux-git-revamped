@@ -35,6 +35,8 @@ source "${PLUGIN_DIR}/src/lib/git/render.sh"
 # shellcheck source=/dev/null
 source "${PLUGIN_DIR}/src/lib/git/actions.sh"
 
+GIT_PROVIDER_TIMEOUT=10
+
 git_max_age() {
 	get_tmux_option "@git_revamped_interval" "5"
 }
@@ -121,8 +123,32 @@ git_web_interval() {
 	echo "${value}"
 }
 
+_git_run_bounded() {
+	local limit="${1}"
+	shift
+	(
+		set -m
+		"$@" &
+		local pid=$! watcher rc
+		(
+			sleep "${limit}"
+			kill -TERM -- "-${pid}"
+		) </dev/null >/dev/null 2>&1 &
+		watcher=$!
+		wait "${pid}"
+		rc=$?
+		kill "${watcher}" 2>/dev/null
+		exit "${rc}"
+	) 2>/dev/null
+}
+
 git_web_refresh() {
-	cache_set "${2}" "$(git_web_segment "${1}")"
+	local value
+	if value="$(_git_run_bounded "${GIT_PROVIDER_TIMEOUT}" git_web_segment "${1}")"; then
+		cache_set "${2}" "${value}"
+	else
+		cache_set "${2}" "$(cache_get "${2}")"
+	fi
 }
 
 git_web_cached() {
