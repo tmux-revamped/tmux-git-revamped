@@ -328,7 +328,7 @@ git_render_branch_cmd() {
 }
 
 _git_pane_list() {
-	tmux list-panes -a -F "#{pane_id}	#{pane_current_path}" 2>/dev/null
+	tmux list-panes -a -F "#{pane_id}|#{pane_current_path}" 2>/dev/null
 }
 
 git_value_for() {
@@ -341,7 +341,7 @@ git_value_for() {
 
 git_publish() {
 	local pane dir metric
-	while IFS=$'\t' read -r pane dir; do
+	while IFS='|' read -r pane dir; do
 		[[ -n "${pane}" && -n "${dir}" ]] || continue
 		is_git_repo "${dir}" || continue
 		for metric in $(get_tmux_option "@git_revamped_published" ""); do

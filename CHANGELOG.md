@@ -85,6 +85,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A remote using an SSH host alias, such as `git@github-work:owner/repo.git`,
   was not recognised as GitHub or GitLab, so its provider segment never ran.
   The alias is now resolved through `ssh -G`.
+- In options mode the pane list was split on a tab, which `read` treats as
+  whitespace, so a pane directory starting or ending with a tab lost it and
+  was not found. The list is now split on `|`.
 
 ## [1.2.0] - 2026-06-29
 
