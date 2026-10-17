@@ -683,3 +683,31 @@ teardown() {
   # Assert
   [[ "${output}" == "feat##1#[default]" ]]
 }
+
+@test "git.sh dispatcher - a stalled provider call is cut off and keeps the last value" {
+  # Arrange
+  GIT_PROVIDER_TIMEOUT=1
+  cache_set web_key " #[fg=cyan]PR 1#[default]"
+  git_web_segment() {
+    sleep 30
+    echo " late"
+  }
+
+  # Act
+  git_web_refresh /repo web_key
+
+  # Assert
+  [[ "$(cache_get web_key)" == " #[fg=cyan]PR 1#[default]" ]]
+}
+
+@test "git.sh dispatcher - a provider call that finishes in time is cached" {
+  # Arrange
+  GIT_PROVIDER_TIMEOUT=5
+  git_web_segment() { echo " #[fg=cyan]PR 4#[default]"; }
+
+  # Act
+  git_web_refresh /repo web_key
+
+  # Assert
+  [[ "$(cache_get web_key)" == " #[fg=cyan]PR 4#[default]" ]]
+}
