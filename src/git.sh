@@ -146,12 +146,12 @@ git_build_status() {
 		label="$(detached_head_label "${sha}" "${tag}")"
 		[[ -n "${label}" ]] && branch="${label}"
 	fi
-	branch="$(truncate_branch "${branch}" "$(get_tmux_option "@git_revamped_max_branch" "25")")"
+	branch="$(publish_escape "$(truncate_branch "${branch}" "$(get_tmux_option "@git_revamped_max_branch" "25")")")"
 	out="$(git_render_branch "${branch}")"
 
 	if ((detached == 0)) && [[ "$(get_tmux_option "@git_revamped_upstream" "0")" == "1" ]]; then
 		local upstream
-		upstream="$(parse_upstream "${header}")"
+		upstream="$(publish_escape "$(parse_upstream "${header}")")"
 		if [[ -n "${upstream}" ]]; then
 			out="${out} $(git_render_count upstream "${upstream}")"
 		else
@@ -298,7 +298,7 @@ git_render_branch_cmd() {
 	}
 	branch="$(_git_branch "${dir}")"
 	[[ -z "${branch}" ]] && return 0
-	git_wrap "$(git_render_branch "$(truncate_branch "${branch}" "$(get_tmux_option "@git_revamped_max_branch" "25")")")"
+	git_wrap "$(git_render_branch "$(publish_escape "$(truncate_branch "${branch}" "$(get_tmux_option "@git_revamped_max_branch" "25")")")")"
 }
 
 _git_pane_list() {

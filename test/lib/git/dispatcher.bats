@@ -647,3 +647,39 @@ teardown() {
 
   [[ "$(head -1 "${TEST_TMPDIR}/tmux_args")" == "list-panes" ]]
 }
+
+@test "git.sh dispatcher - a hash in a branch name is doubled for tmux" {
+  # Arrange
+  _git_status() { printf '## fix/#(id)...origin/fix/#(id)\n'; }
+  set_tmux_option "@git_revamped_upstream" "1"
+
+  # Act
+  run git_build_status /repo
+
+  # Assert
+  [[ "${output}" == "fix/##(id)#[default] #[fg=cyan]-> origin/fix/##(id)#[default]" ]]
+}
+
+@test "git.sh dispatcher - a hash in a detached tag is doubled for tmux" {
+  # Arrange
+  _git_status() { printf '## HEAD (no branch)\n'; }
+  _git_short_sha() { echo "abc1234"; }
+  _git_describe() { echo "v1#x"; }
+
+  # Act
+  run git_build_status /repo
+
+  # Assert
+  [[ "${output}" == "abc1234 v1##x#[default]" ]]
+}
+
+@test "git.sh dispatcher - the branch command doubles a hash in the name" {
+  # Arrange
+  _git_branch() { echo "feat#1"; }
+
+  # Act
+  run main branch /repo
+
+  # Assert
+  [[ "${output}" == "feat##1#[default]" ]]
+}
