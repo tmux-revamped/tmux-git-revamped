@@ -89,7 +89,8 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_after` | empty | format placed after the status, only when the status is not empty |
 | `@git_revamped_reset` | `#[default]` | style that closes every segment; set it to a plain `#[fg=...]` to keep a background set by `@git_revamped_before` |
 | `@git_revamped_icons` | `ascii` | default icon set for every segment: `ascii` uses plain characters, `nerd` uses Nerd Font glyphs; any `@git_revamped_<kind>_icon` still overrides it |
-| `@git_revamped_branch_{color,icon}` | empty | branch styling |
+| `@git_revamped_branch_color` | empty | branch style, for example `#[fg=cyan]` |
+| `@git_revamped_branch_icon` | empty | icon placed before the branch name |
 | `@git_revamped_changed_{color,icon}` | yellow, `~` | modified-file styling |
 | `@git_revamped_insertions_{color,icon}` | green, `+` | inserted-lines styling |
 | `@git_revamped_deletions_{color,icon}` | red, `-` | deleted-lines styling |
@@ -108,7 +109,10 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_worktree_{color,icon}` | cyan, `wt` | linked-worktree styling |
 | `@git_revamped_submodule_{color,icon}` | yellow, `sub` | dirty-submodule styling |
 | `@git_revamped_clean_{color,icon}` | green, `ok` | clean-tree styling |
-| `@git_revamped_ci_{pass,fail,pending}_{color,icon,label}` | green/red/yellow, `CI` | CI status styling; a label set to `''` shows the icon alone |
+| `@git_revamped_ci_pass_color` | `#[fg=green]` | style of a passing CI status |
+| `@git_revamped_ci_fail_color` | `#[fg=red]` | style of a failing CI status |
+| `@git_revamped_ci_pending_color` | `#[fg=yellow]` | style of a pending CI status |
+| `@git_revamped_ci_{pass,fail,pending}_{icon,label}` | `CI`, the status name | CI status icon and label; a label set to `''` shows the icon alone |
 
 > [!IMPORTANT]
 > The `@git_revamped_web` segment calls the GitHub or GitLab API on every refresh
@@ -121,6 +125,14 @@ you can replace with Nerd Font glyphs.
 > `glab ci status`. Set `@git_revamped_ci` to `0` to skip that extra call.
 >
 > The provider calls run inside the repository of the active pane, and each repository speaks to its provider as its own account. On GitHub the account is the login in the project's `user.email` when that is a GitHub noreply address, such as `299237933+octocat@users.noreply.github.com`, then the `@git_revamped_gh_accounts` entry for the repository owner, then the active `gh` account. The account's token comes from `gh auth token --user <account>`, so every account must be logged in to `gh`. GitLab is reached through the host in the repository's remote, so each GitLab instance uses the account `glab` holds for it. An SSH host alias such as `git@github-work:owner/repo.git` is resolved through `ssh -G` to find the provider.
+
+### Internal state
+
+The plugin manages these options itself. Do not set them.
+
+| Option | Holds |
+|--------|-------|
+| `@git_revamped_published` | space-separated metrics the status line uses, written at load so the `options` render mode publishes only those |
 
 ## Render mode
 
