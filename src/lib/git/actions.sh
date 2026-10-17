@@ -164,7 +164,6 @@ git_doctor() {
   _doctor_tool git
   _doctor_tool gh
   _doctor_tool glab
-  _doctor_tool jq
   _doctor_tool lazygit
   if is_git_repo "${dir}"; then
     local provider

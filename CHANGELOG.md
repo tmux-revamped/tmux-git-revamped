@@ -88,6 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In options mode the pane list was split on a tab, which `read` treats as
   whitespace, so a pane directory starting or ending with a tab lost it and
   was not found. The list is now split on `|`.
+- The `doctor` report listed `jq` as a tool, but nothing in the plugin runs
+  `jq`; the provider counts use `--jq` inside `gh`. It no longer reports `jq`.
 
 ## [1.2.0] - 2026-06-29
 
