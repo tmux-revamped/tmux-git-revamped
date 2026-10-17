@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Switching `@git_revamped_render` away from `options` and reloading left the
+  background process running forever. The entry point now clears the ticker
+  ownership, so that process sees it no longer owns the ticker and exits.
 - A `#` in a branch, tag, or upstream name is doubled before it reaches the
   status line, so a name such as `fix/#(cmd)` shows literally instead of being
   run or read as a style.
