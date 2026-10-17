@@ -1,16 +1,4 @@
 #!/usr/bin/env bash
-#
-# git.sh: command dispatcher for tmux-git-revamped.
-#
-# Usage: git.sh status <dir> | branch <dir> | refresh <dir>
-#        git.sh lazygit <dir> | menu <dir> | checkout <dir> <branch>
-#        git.sh browse <dir> | doctor <dir>
-#
-# The full status string can run slow work (diff, stash, provider API calls), so
-# it is cached per directory in a tmux server user-option and refreshed by a
-# detached worker. The status render returns the cached value instantly. The
-# branch alone is one fast rev-parse, so it is computed live. The action
-# subcommands are bound to keys and never run on the status path.
 
 PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -45,9 +33,6 @@ _git_key() {
 	printf 'status_%s' "$(printf '%s' "${1}" | cksum | awk '{ print $1 "_" $2 }')"
 }
 
-# git_ci_segment DIR PROVIDER -> a leading-space CI token for the head commit,
-# empty when CI reporting is off or no status is available. Runs only inside the
-# opt-in web path, so the provider CLI is already gated by the caller.
 git_ci_segment() {
 	local dir="${1}" provider="${2}" status=""
 	[[ "$(get_tmux_option "@git_revamped_ci" "1")" == "1" ]] || return 0
@@ -60,9 +45,6 @@ git_ci_segment() {
 	echo " $(git_render_ci "${status}")"
 }
 
-# git_web_segment DIR -> provider PR, review, issue, bug, and CI segments, leading
-# space. On GitHub the issue count excludes bug-labeled issues, which surface as
-# a separate bug segment. GitLab reports no separate bug count.
 git_web_segment() {
 	local dir="${1}" url provider
 	url="$(_git_remote_url "${dir}")"
@@ -157,7 +139,6 @@ git_web_cached() {
 	cache_render "${key}" "$(git_web_interval)" git_web_refresh "${1}" "${key}"
 }
 
-# git_build_status DIR -> the full formatted status string.
 git_build_status() {
 	local dir="${1}" status header branch out modified untracked detached=0
 	status="$(_git_status "${dir}")"
@@ -269,16 +250,11 @@ git_build_status() {
 	echo "${out}"
 }
 
-# _git_fetch DIR -> a detached background fetch that prunes deleted remote
-# branches and updates tags. Seam; tests override it.
 _git_fetch() {
 	(git -C "${1}" --no-optional-locks fetch --quiet --prune --tags) </dev/null >/dev/null 2>&1 &
 	disown 2>/dev/null || true
 }
 
-# git_autofetch DIR -> when @git_revamped_autofetch is on, fire a throttled,
-# detached fetch so ahead/behind stays current without ever blocking the render.
-# The last-fetch time is kept per repo in a server option, no crontab, no rc edit.
 git_autofetch() {
 	local dir="${1}"
 	[[ "$(get_tmux_option "@git_revamped_autofetch" "0")" == "1" ]] || return 0

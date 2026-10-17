@@ -1,10 +1,4 @@
 #!/usr/bin/env bash
-#
-# git.sh: git repository status data.
-#
-# Pure parsers turn `git status -b --porcelain` and `git diff --numstat` text into
-# counts. Every real git or provider call sits behind a seam the tests override,
-# so no repository is touched under test.
 
 [[ -n "${_GIT_REVAMPED_GIT_LOADED:-}" ]] && return 0
 _GIT_REVAMPED_GIT_LOADED=1
@@ -13,7 +7,6 @@ GIT_PROVIDER_LIST_LIMIT=1000
 GIT_PROVIDER_PAGE_SIZE=100
 GIT_PROVIDER_MAX_PAGES=10
 
-# parse_branch HEADER -> branch name from a porcelain header line.
 parse_branch() {
   local header="${1}" branch
   [[ "${header}" == "## "* ]] || return 1
@@ -27,60 +20,45 @@ parse_branch() {
   [[ -n "${branch}" ]] && echo "${branch}"
 }
 
-# parse_upstream HEADER -> the upstream ref like origin/main, empty when none.
 parse_upstream() {
   [[ "${1}" =~ ^##\ (No\ commits\ yet\ on\ |Initial\ commit\ on\ )?[^[:space:]]+\.\.\.([^[:space:]]+) ]] && echo "${BASH_REMATCH[2]}"
 }
 
-# parse_ahead HEADER -> commits ahead of upstream, 0 when none.
 parse_ahead() {
   [[ "${1}" =~ \[ahead\ ([0-9]+) ]] && { echo "${BASH_REMATCH[1]}"; return 0; }
   echo 0
 }
 
-# parse_behind HEADER -> commits behind upstream, 0 when none.
 parse_behind() {
   [[ "${1}" =~ behind\ ([0-9]+) ]] && { echo "${BASH_REMATCH[1]}"; return 0; }
   echo 0
 }
 
-# count_modified TEXT -> tracked files with changes, from porcelain body lines.
 count_modified() {
   printf '%s\n' "${1}" | awk '/^##/ {next} /^\?\?/ {next} NF {c++} END {print c+0}'
 }
 
-# count_untracked TEXT -> untracked files, from porcelain body lines.
 count_untracked() {
   printf '%s\n' "${1}" | grep -c '^??'
 }
 
-# count_staged TEXT -> files staged in the index (porcelain column 1 set), from
-# porcelain body lines. Excludes untracked and unmerged entries.
 count_staged() {
   printf '%s\n' "${1}" | awk '/^##/{next} /^\?\?/{next} {x=substr($0,1,1); y=substr($0,2,1); if (x=="U"||y=="U"||(x=="D"&&y=="D")||(x=="A"&&y=="A")) next; if (index("MADRC",x)>0) s++} END {print s+0}'
 }
 
-# count_conflict TEXT -> unmerged (conflicted) files, from porcelain body lines.
-# Unmerged is any entry with a U in either column, or the DD/AA pairs.
 count_conflict() {
   printf '%s\n' "${1}" | awk '/^##/{next} /^\?\?/{next} {x=substr($0,1,1); y=substr($0,2,1); if (x=="U"||y=="U"||(x=="D"&&y=="D")||(x=="A"&&y=="A")) c++} END {print c+0}'
 }
 
-# count_submodule_dirty TEXT -> submodules with uncommitted changes, from the
-# `git submodule status` output where a leading + marks a dirty submodule.
 count_submodule_dirty() {
   printf '%s\n' "${1}" | awk '/^\+/ {c++} END {print c+0}'
 }
 
-# _read_first_line FILE -> the first line with surrounding whitespace stripped,
-# empty when the file is absent.
 _read_first_line() {
   [[ -f "${1}" ]] || { echo ""; return 0; }
   head -1 "${1}" 2>/dev/null | tr -d ' \n'
 }
 
-# _rebase_progress DIR CURFILE TOTFILE -> " cur/tot" when both files hold
-# integers, empty otherwise. Used to annotate an in-progress rebase or am.
 _rebase_progress() {
   local dir="${1}" cur tot
   cur="$(_read_first_line "${dir}/${2}")"
@@ -89,9 +67,6 @@ _rebase_progress() {
   echo " ${cur}/${tot}"
 }
 
-# git_special_state GITDIR -> the in-progress operation: rebase, am, merge,
-# cherry-pick, revert, or bisect; empty when the worktree is in a normal state.
-# A rebase or am also reports its step as " X/Y" when the counters are readable.
 git_special_state() {
   local d="${1}"
   if [[ -d "${d}/rebase-merge" ]]; then
@@ -113,8 +88,6 @@ git_special_state() {
   echo ""
 }
 
-# is_linked_worktree GITDIR -> 0 when the absolute git dir is a linked worktree,
-# whose path lives under the main repo's worktrees directory.
 is_linked_worktree() {
   case "${1}" in
     */worktrees/*) return 0 ;;
@@ -122,8 +95,6 @@ is_linked_worktree() {
   esac
 }
 
-# detached_head_label SHA TAG -> "SHA TAG" when a tag is known, else SHA; empty
-# when no SHA is available.
 detached_head_label() {
   local sha="${1}" tag="${2}"
   [[ -z "${sha}" ]] && { echo ""; return 0; }
@@ -134,8 +105,6 @@ detached_head_label() {
   fi
 }
 
-# ci_status_from_buckets TEXT -> fail, pending, pass, or empty from the bucket
-# lines emitted by `gh pr checks --json bucket`.
 ci_status_from_buckets() {
   local txt="${1}"
   [[ -z "${txt//[[:space:]]/}" ]] && { echo ""; return 0; }
@@ -144,8 +113,6 @@ ci_status_from_buckets() {
   echo "pass"
 }
 
-# ci_status_from_glab TEXT -> fail, pending, pass, or empty from a glab pipeline
-# status string.
 ci_status_from_glab() {
   local txt
   txt="$(printf '%s' "${1}" | tr 'A-Z' 'a-z')"
@@ -158,12 +125,10 @@ ci_status_from_glab() {
   esac
 }
 
-# parse_diffstat TEXT -> "<changed> <insertions> <deletions>" from numstat.
 parse_diffstat() {
   printf '%s\n' "${1}" | awk -F'\t' '{ c++; if ($1 ~ /^[0-9]+$/) i+=$1; if ($2 ~ /^[0-9]+$/) d+=$2 } END { print c+0, i+0, d+0 }'
 }
 
-# truncate_branch BRANCH MAX -> BRANCH, shortened with an ellipsis past MAX.
 truncate_branch() {
   local branch="${1}" max="${2:-25}"
   [[ "${max}" =~ ^[0-9]+$ ]] || max=25
@@ -174,7 +139,6 @@ truncate_branch() {
   fi
 }
 
-# relative_time NOW TS -> a short age like 12m, 3h, 5d.
 relative_time() {
   [[ "${1}" =~ ^[0-9]+$ && "${2}" =~ ^[0-9]+$ ]] || { echo ""; return 0; }
   local diff=$(( ${1} - ${2} ))
@@ -188,7 +152,6 @@ relative_time() {
   fi
 }
 
-# provider_from_url URL -> github, gitlab, or empty.
 host_from_url() {
   local url="${1}"
   url="${url#*://}"
@@ -238,7 +201,6 @@ provider_from_url() {
   esac
 }
 
-# Host-probe seams. Tests override these.
 _git_in_repo() { git -C "${1}" --no-optional-locks rev-parse --git-dir >/dev/null 2>&1; }
 _git_branch() { git -C "${1}" --no-optional-locks rev-parse --abbrev-ref HEAD 2>/dev/null; }
 _git_status() { git -C "${1}" --no-optional-locks status -b --porcelain 2>/dev/null; }
@@ -276,7 +238,6 @@ _glab_review_count() { _glab_paged_count '!' glab mr list --reviewer=@me; }
 _glab_issue_count() { _glab_paged_count '#' glab issue list; }
 _glab_ci_status() { glab ci status </dev/null 2>/dev/null; }
 
-# is_git_repo DIR -> 0 when DIR is inside a git work tree.
 is_git_repo() { _git_in_repo "${1}"; }
 
 export -f host_from_url

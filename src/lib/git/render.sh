@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-#
-# render.sh: format a git segment with a configurable color and icon. Each kind,
-# such as changed or ahead, reads @git_revamped_<kind>_color and
-# @git_revamped_<kind>_icon, falling back to a sensible default.
 
 [[ -n "${_GIT_REVAMPED_RENDER_LOADED:-}" ]] && return 0
 _GIT_REVAMPED_RENDER_LOADED=1
@@ -120,7 +116,6 @@ _git_default_icon() {
   esac
 }
 
-# git_render_count KIND VALUE -> "<color><icon> <value><reset>", icon optional.
 git_render_count() {
   local kind="${1}" val="${2}" color icon
   color=$(get_tmux_option "@git_revamped_${kind}_color" "$(_git_default_color "${kind}")")
@@ -132,7 +127,6 @@ git_render_count() {
   fi
 }
 
-# git_render_branch BRANCH -> "<color><icon> <branch><reset>", icon optional.
 git_render_branch() {
   local color icon
   color=$(get_tmux_option "@git_revamped_branch_color" "")
@@ -159,9 +153,6 @@ git_render_flag() {
   echo "${color}${icon:-${label}}$(_git_reset)"
 }
 
-# git_render_ci STATUS -> a CI token colored by status, empty for unknown status.
-# pass is green, fail is red, pending is yellow; each color, icon, and label is
-# overridable through @git_revamped_ci_<status>_{color,icon,label}.
 git_render_ci() {
   local status="${1}" color icon label
   case "${status}" in
