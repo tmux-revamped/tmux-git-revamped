@@ -8,7 +8,7 @@
 
 </div>
 
-**2** placeholders · **2** platforms · **158** tests · **95%+** coverage
+**2** placeholders · **2** platforms · **95%+** coverage
 
 The active pane's repository at a glance: branch, changed files, inserted and deleted lines, and untracked files, with optional stash, ahead and behind counts, last-commit age, and provider pull-request and issue counts. The full status can run slow work, so it is cached per directory and refreshed by a detached worker. The status line reads the cached value and returns instantly. No temp files are touched.
 
