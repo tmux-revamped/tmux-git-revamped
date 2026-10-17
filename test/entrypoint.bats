@@ -69,3 +69,17 @@ make_repo() {
   # Assert
   [[ "${output}" == *"trunk"* ]]
 }
+
+@test "entrypoint - lazygit and browse stay unbound by default" {
+  # Arrange
+  local keys
+
+  # Act
+  bash "${PLUGIN_DIR}/git-revamped.tmux"
+
+  # Assert
+  keys="$(tmux list-keys -T prefix)"
+  [[ "${keys}" == *" M-v "*" menu #{q:pane_current_path}"* ]] || false
+  [[ "${keys}" != *" lazygit "* ]] || false
+  [[ "${keys}" != *" browse "* ]]
+}
