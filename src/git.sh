@@ -42,7 +42,7 @@ git_max_age() {
 }
 
 _git_key() {
-	printf 'status_%s' "$(printf '%s' "${1}" | tr -c 'A-Za-z0-9' '_')"
+	printf 'status_%s' "$(printf '%s' "${1}" | cksum | awk '{ print $1 "_" $2 }')"
 }
 
 # git_ci_segment DIR PROVIDER -> a leading-space CI token for the head commit,

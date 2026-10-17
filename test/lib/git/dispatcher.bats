@@ -711,3 +711,25 @@ teardown() {
   # Assert
   [[ "$(cache_get web_key)" == " #[fg=cyan]PR 4#[default]" ]]
 }
+
+@test "git.sh dispatcher - paths that differ only in punctuation get separate cache keys" {
+  # Arrange
+  local dash="/a/b-c" underscore="/a/b_c"
+
+  # Act
+  run _git_key "${dash}"
+
+  # Assert
+  [[ "${output}" != "$(_git_key "${underscore}")" ]]
+}
+
+@test "git.sh dispatcher - the cache key is a plain option name" {
+  # Arrange
+  local dir="/tmp/it's a #dir"
+
+  # Act
+  run _git_key "${dir}"
+
+  # Assert
+  [[ "${output}" =~ ^status_[0-9]+_[0-9]+$ ]]
+}
