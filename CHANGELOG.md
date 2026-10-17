@@ -41,6 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A branch name holding a dot, such as `release/1.2`, was cut at the dot, and a
+  repository with no commits showed `No` as its branch. The branch is now read
+  up to the `...` upstream separator, and the unborn-branch header yields the
+  branch and its upstream.
 - The branch menu built each checkout command by pasting the branch name and
   directory inside quotes, so a name holding `'`, `"`, `$`, or `#` could break
   the command or run code. Both are now shell-quoted and escaped for tmux, and

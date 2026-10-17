@@ -11,12 +11,21 @@ _GIT_REVAMPED_GIT_LOADED=1
 
 # parse_branch HEADER -> branch name from a porcelain header line.
 parse_branch() {
-  [[ "${1}" =~ ^##\ ([^.[:space:]]+) ]] && echo "${BASH_REMATCH[1]}"
+  local header="${1}" branch
+  [[ "${header}" == "## "* ]] || return 1
+  header="${header#"## "}"
+  case "${header}" in
+    "No commits yet on "*) header="${header#"No commits yet on "}" ;;
+    "Initial commit on "*) header="${header#"Initial commit on "}" ;;
+  esac
+  branch="${header%%"..."*}"
+  branch="${branch%%" "*}"
+  [[ -n "${branch}" ]] && echo "${branch}"
 }
 
 # parse_upstream HEADER -> the upstream ref like origin/main, empty when none.
 parse_upstream() {
-  [[ "${1}" =~ ^##\ [^[:space:]]+\.\.\.([^[:space:]]+) ]] && echo "${BASH_REMATCH[1]}"
+  [[ "${1}" =~ ^##\ (No\ commits\ yet\ on\ |Initial\ commit\ on\ )?[^[:space:]]+\.\.\.([^[:space:]]+) ]] && echo "${BASH_REMATCH[2]}"
 }
 
 # parse_ahead HEADER -> commits ahead of upstream, 0 when none.

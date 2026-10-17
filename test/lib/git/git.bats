@@ -270,3 +270,47 @@ teardown() {
 
   [ -z "${output}" ]
 }
+
+@test "git.sh - parse_branch keeps a dot inside the branch name" {
+  # Arrange
+  local header='## release/1.2...origin/release/1.2 [behind 3]'
+
+  # Act
+  run parse_branch "${header}"
+
+  # Assert
+  [[ "${output}" == "release/1.2" ]]
+}
+
+@test "git.sh - parse_branch reads the branch of a repository with no commits" {
+  # Arrange
+  local header='## No commits yet on main'
+
+  # Act
+  run parse_branch "${header}"
+
+  # Assert
+  [[ "${output}" == "main" ]]
+}
+
+@test "git.sh - parse_branch reads a detached head as HEAD" {
+  # Arrange
+  local header='## HEAD (no branch)'
+
+  # Act
+  run parse_branch "${header}"
+
+  # Assert
+  [[ "${output}" == "HEAD" ]]
+}
+
+@test "git.sh - parse_upstream reads the upstream of a repository with no commits" {
+  # Arrange
+  local header='## No commits yet on main...origin/main'
+
+  # Act
+  run parse_upstream "${header}"
+
+  # Assert
+  [[ "${output}" == "origin/main" ]]
+}
