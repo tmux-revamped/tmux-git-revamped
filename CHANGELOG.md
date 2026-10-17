@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Two repositories whose paths differed only in punctuation, such as `/a/b-c`
+  and `/a/b_c`, shared one cached status. The cache key is now a checksum of
+  the full path.
 - A stalled GitHub or GitLab call could freeze the options-mode background
   process, because the provider segment ran inline with no time limit. It is
   now stopped after 10 seconds, and the last provider value stays on screen.
