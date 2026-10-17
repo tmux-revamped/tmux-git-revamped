@@ -314,3 +314,82 @@ teardown() {
   # Assert
   [[ "${output}" == "origin/main" ]]
 }
+
+fake_provider_cli() {
+  local bin="${BATS_TEST_TMPDIR}/bin"
+  mkdir -p "${bin}"
+  cat > "${bin}/${1}" <<'STUB'
+#!/usr/bin/env bash
+total="${FAKE_ITEMS}" limit=30 per_page=30 page=1 marker='!'
+[[ " $* " == *" issue "* ]] && marker='#'
+while [[ $# -gt 0 ]]; do
+  case "${1}" in
+    --limit) limit="${2}"; shift ;;
+    --per-page) per_page="${2}"; shift ;;
+    --page) page="${2}"; shift ;;
+  esac
+  shift
+done
+if [[ "$(basename "${0}")" == "gh" ]]; then
+  ((total < limit)) && limit="${total}"
+  printf '%s\n' "${limit}"
+  exit 0
+fi
+first=$(((page - 1) * per_page + 1))
+last=$((page * per_page))
+((last > total)) && last="${total}"
+for ((i = first; i <= last; i++)); do
+  printf '%s%s\topen item\n' "${marker}" "${i}"
+done
+STUB
+  chmod +x "${bin}/${1}"
+  PATH="${bin}:${PATH}"
+}
+
+@test "git.sh lib - the github pull request count is not capped at thirty" {
+  # Arrange
+  export FAKE_ITEMS=45
+  fake_provider_cli gh
+
+  # Act
+  run _gh_pr_count
+
+  # Assert
+  [[ "${output}" == "45" ]]
+}
+
+@test "git.sh lib - the github issue count is not capped at thirty" {
+  # Arrange
+  export FAKE_ITEMS=45
+  fake_provider_cli gh
+
+  # Act
+  run _gh_issue_count
+
+  # Assert
+  [[ "${output}" == "45" ]]
+}
+
+@test "git.sh lib - the gitlab merge request count reads every page" {
+  # Arrange
+  export FAKE_ITEMS=150
+  fake_provider_cli glab
+
+  # Act
+  run _glab_mr_count
+
+  # Assert
+  [[ "${output}" == "150" ]]
+}
+
+@test "git.sh lib - the gitlab issue count reads every page" {
+  # Arrange
+  export FAKE_ITEMS=230
+  fake_provider_cli glab
+
+  # Act
+  run _glab_issue_count
+
+  # Assert
+  [[ "${output}" == "230" ]]
+}
