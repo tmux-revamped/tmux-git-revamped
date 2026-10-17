@@ -9,6 +9,10 @@
 [[ -n "${_GIT_REVAMPED_GIT_LOADED:-}" ]] && return 0
 _GIT_REVAMPED_GIT_LOADED=1
 
+GIT_PROVIDER_LIST_LIMIT=1000
+GIT_PROVIDER_PAGE_SIZE=100
+GIT_PROVIDER_MAX_PAGES=10
+
 # parse_branch HEADER -> branch name from a porcelain header line.
 parse_branch() {
   local header="${1}" branch
@@ -248,19 +252,28 @@ _git_describe() { git -C "${1}" --no-optional-locks describe --tags --abbrev=0 2
 _git_base_count() { git -C "${1}" --no-optional-locks rev-list --count "${2}..HEAD" 2>/dev/null | head -1 | tr -d '\n '; }
 _git_submodule_status() { git -C "${1}" --no-optional-locks submodule status 2>/dev/null; }
 _git_now() { date +%s 2>/dev/null || echo 0; }
-_gh_pr_count() { gh pr list --json number --jq 'length' 2>/dev/null | head -1 | tr -d '\n '; }
+_gh_pr_count() { gh pr list --limit "${GIT_PROVIDER_LIST_LIMIT}" --json number --jq 'length' 2>/dev/null | head -1 | tr -d '\n '; }
 _gh_review_count() { gh pr status --json reviewRequests --jq '.needsReview | length' 2>/dev/null | head -1 | tr -d '\n '; }
-_gh_issue_count() { gh issue list --assignee @me --json number --jq 'length' 2>/dev/null | head -1 | tr -d '\n '; }
-_gh_bug_count() { gh issue list --assignee @me --json labels --jq '[.[] | select(any(.labels[].name; . == "bug"))] | length' 2>/dev/null | head -1 | tr -d '\n '; }
+_gh_issue_count() { gh issue list --assignee @me --limit "${GIT_PROVIDER_LIST_LIMIT}" --json number --jq 'length' 2>/dev/null | head -1 | tr -d '\n '; }
+_gh_bug_count() { gh issue list --assignee @me --limit "${GIT_PROVIDER_LIST_LIMIT}" --json labels --jq '[.[] | select(any(.labels[].name; . == "bug"))] | length' 2>/dev/null | head -1 | tr -d '\n '; }
 _git_user_email() { git -C "${1}" config user.email 2>/dev/null; }
 _ssh_hostname() { [[ -n "${1}" ]] && ssh -G "${1}" 2>/dev/null | awk '$1 == "hostname" { print $2; exit }'; }
 _gh_token_for() { gh auth token --user "${1}" 2>/dev/null; }
 _gh_ci_buckets() { gh pr checks --json bucket --jq '.[].bucket' 2>/dev/null; }
-_glab_mr_count() { glab mr list 2>/dev/null | grep -cE '^!'; }
-# shellcheck disable=SC2120
-_glab_review_count() { glab mr list --reviewer=@me 2>/dev/null | grep -cE '^!'; return 0; }
-# shellcheck disable=SC2120
-_glab_issue_count() { glab issue list 2>/dev/null | grep -cE '^#'; return 0; }
+_glab_paged_count() {
+  local marker="${1}" total=0 page count
+  shift
+  for ((page = 1; page <= GIT_PROVIDER_MAX_PAGES; page++)); do
+    count="$("$@" --per-page "${GIT_PROVIDER_PAGE_SIZE}" --page "${page}" 2>/dev/null | grep -c "^${marker}")"
+    [[ "${count}" =~ ^[0-9]+$ ]] || count=0
+    total=$((total + count))
+    ((count < GIT_PROVIDER_PAGE_SIZE)) && break
+  done
+  echo "${total}"
+}
+_glab_mr_count() { _glab_paged_count '!' glab mr list; }
+_glab_review_count() { _glab_paged_count '!' glab mr list --reviewer=@me; }
+_glab_issue_count() { _glab_paged_count '#' glab issue list; }
 _glab_ci_status() { glab ci status </dev/null 2>/dev/null; }
 
 # is_git_repo DIR -> 0 when DIR is inside a git work tree.
@@ -312,6 +325,7 @@ export -f _gh_review_count
 export -f _gh_issue_count
 export -f _gh_bug_count
 export -f _gh_ci_buckets
+export -f _glab_paged_count
 export -f _glab_mr_count
 export -f _glab_review_count
 export -f _glab_issue_count

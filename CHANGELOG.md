@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Pull request, issue, and merge request counts stopped at 30, the default
+  page size of `gh` and `glab`. GitHub lists now ask for up to 1000 items, and
+  GitLab lists read up to ten pages of 100.
 - A branch name holding a dot, such as `release/1.2`, was cut at the dot, and a
   repository with no commits showed `No` as its branch. The branch is now read
   up to the `...` upstream separator, and the unborn-branch header yields the
