@@ -111,7 +111,7 @@ teardown() {
   set_tmux_option "@git_revamped_worktree" "1"
   _git_dir() { echo "/repo/.git"; }
   run git_build_status /repo
-  [[ "${output}" != *"wt wt"* ]]
+  [[ "${output}" == "main#[default] #[fg=yellow]~ 2#[default] #[fg=green]+ 7#[default] #[fg=red]- 1#[default] #[fg=blue]? 2#[default]" ]]
 }
 
 @test "git.sh dispatcher - base divergence shows commits ahead of the base" {
@@ -145,7 +145,7 @@ teardown() {
 @test "git.sh dispatcher - clean indicator is hidden on a dirty tree" {
   set_tmux_option "@git_revamped_clean" "1"
   run git_build_status /repo
-  [[ "${output}" != *"ok ok"* ]]
+  [[ "${output}" == "main#[default] #[fg=yellow]~ 2#[default] #[fg=green]+ 7#[default] #[fg=red]- 1#[default] #[fg=blue]? 2#[default]" ]]
 }
 
 @test "git.sh dispatcher - web segment adds provider counts when enabled" {
@@ -296,7 +296,8 @@ teardown() {
 
 @test "git.sh - _git_fetch seam is runnable" {
   run _git_fetch /nonexistent-repo-xyz
-  true
+  [ "${status}" -eq 0 ]
+  [ -z "${output}" ]
 }
 
 @test "git.sh dispatcher - lazygit subcommand opens a popup through the tmux seam" {
@@ -368,21 +369,29 @@ teardown() {
   [[ -z "${output}" ]]
 }
 
+wait_for_path() {
+  local attempt
+  for ((attempt = 0; attempt < 50; attempt++)); do
+    [[ -e "${1}" ]] && return 0
+    sleep 0.1
+  done
+  return 1
+}
+
 @test "git.sh - _git_fetch returns before the fetch it started finishes" {
-  local shim="${BATS_TEST_TMPDIR}/bin"
-  mkdir -p "${shim}"
-  printf '#!/bin/sh\nsleep 6\n' > "${shim}/git"
+  # Arrange
+  local shim="${BATS_TEST_TMPDIR}/bin" state="${BATS_TEST_TMPDIR}/fetch"
+  mkdir -p "${shim}" "${state}"
+  printf '#!/bin/sh\necho $$ > "%s/started"\nsleep 30\n: > "%s/finished"\n' "${state}" "${state}" > "${shim}/git"
   chmod +x "${shim}/git"
 
-  local start end
-  start="$(date +%s)"
-  run bash -c 'PATH="'"${shim}"':${PATH}"; . "'"${BATS_TEST_DIRNAME}"'/../../../src/lib/git/git.sh" 2>/dev/null || true
-    out=$(_git_fetch /tmp)
-    printf "returned\n"'
-  end="$(date +%s)"
+  # Act
+  PATH="${shim}:${PATH}" _git_fetch /tmp
 
-  [[ "${output}" == *"returned"* ]]
-  (( end - start < 5 ))
+  # Assert
+  wait_for_path "${state}/started"
+  kill "$(cat "${state}/started")"
+  [ ! -e "${state}/finished" ]
 }
 
 @test "git.sh dispatcher - status is wrapped in before and after when set" {
