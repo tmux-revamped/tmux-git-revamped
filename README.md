@@ -83,7 +83,7 @@ you can replace with Nerd Font glyphs.
 | `@git_revamped_web_zero` | `1` | set to `0` to hide provider counts that are zero |
 | `@git_revamped_gh_accounts` | empty | space-separated `owner=account` pairs naming the `gh` account for a repository owner, used when the project's `user.email` names none |
 | `@git_revamped_key_lazygit` | empty | key to bind for the lazygit popup, for example `g` |
-| `@git_revamped_key_menu` | empty | key to bind for the branch switcher menu |
+| `@git_revamped_key_menu` | `M-v` | key to bind for the branch switcher menu; `''` binds nothing |
 | `@git_revamped_key_browse` | empty | key to bind to open the repo on its provider |
 | `@git_revamped_before` | empty | format placed before the status, only when the status is not empty, for example a theme's pill opening |
 | `@git_revamped_after` | empty | format placed after the status, only when the status is not empty |
@@ -112,7 +112,7 @@ you can replace with Nerd Font glyphs.
 
 > [!IMPORTANT]
 > The `@git_revamped_web` segment calls the GitHub or GitLab API on every refresh
-> and needs `gh` plus `jq`, or `glab`, installed and authenticated. It is off by
+> and needs `gh` or `glab` installed and authenticated. It is off by
 > default. Leave it off unless you accept the API calls and their rate limits.
 > On GitHub, issues labeled `bug` count toward the bug segment and are excluded
 > from the issue segment, so the two never double-count the same issue.
@@ -163,7 +163,7 @@ The worktree and clean segments are flags, so they render their icon alone.
 
 ## Actions and key bindings
 
-Three actions are available as dispatcher subcommands and are bound to keys only when you set the matching option. Leaving an option unset means no key is bound, so the plugin never overrides a key you did not opt into.
+Three actions are available as dispatcher subcommands. The branch switcher menu is bound to `M-v` in the prefix table by default; set `@git_revamped_key_menu` to another key to move it, or to `''` to bind nothing. The lazygit and browse actions are bound only when you set their option.
 
 | Option | Action |
 |--------|--------|
@@ -311,7 +311,7 @@ set -g @git_revamped_review_color '#[fg=#d33682]'
 Works on every supported platform and architecture with built-in tools. The status
 reads through `git`, which is required, on Linux (x86_64 and arm64) and macOS
 (Intel and Apple Silicon). The optional provider segment additionally needs `gh`
-and `jq` for GitHub, or `glab` for GitLab; without them that segment stays empty.
+for GitHub, or `glab` for GitLab; without them that segment stays empty.
 
 ## Development
 
