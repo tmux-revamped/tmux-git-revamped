@@ -1,215 +1,182 @@
 <div align="center">
 
-<h1>tmux-git-revamped</h1>
+# tmux-git-revamped
 
-**Git repository status in your tmux status bar, without ever blocking the render.**
+<strong>Show the active pane's git branch, changes and provider counts in the tmux status bar without blocking it.</strong>
 
-[![Tests](https://github.com/tmux-revamped/tmux-git-revamped/actions/workflows/tests.yml/badge.svg)](https://github.com/tmux-revamped/tmux-git-revamped/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](CHANGELOG.md)
+English &nbsp;|&nbsp; [日本語](README.ja.md) &nbsp;|&nbsp; [简体中文](README.zh-Hans.md) &nbsp;|&nbsp; [繁體中文（香港）](README.zh-HK.md)
+
+[![Tests](https://github.com/tmux-revamped/tmux-git-revamped/actions/workflows/tests.yml/badge.svg)](https://github.com/tmux-revamped/tmux-git-revamped/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](CHANGELOG.md)
+
+<p align="center">
+  <a href="#what-it-does">What it does</a> &nbsp;|&nbsp;
+  <a href="#requirements">Requirements</a> &nbsp;|&nbsp;
+  <a href="#installation">Installation</a> &nbsp;|&nbsp;
+  <a href="#usage">Usage</a> &nbsp;|&nbsp;
+  <a href="#configuration">Configuration</a> &nbsp;|&nbsp;
+  <a href="#key-bindings">Key bindings</a> &nbsp;|&nbsp;
+  <a href="#how-it-works">How it works</a> &nbsp;|&nbsp;
+  <a href="#development">Development</a>
+</p>
 
 </div>
 
-**2** placeholders · **2** platforms · **95%+** coverage
+**2** placeholders, **21** segments after the branch name, each with its own color and icon option, and every cached value held in tmux options instead of files.
 
-The active pane's repository at a glance: branch, changed files, inserted and deleted lines, and untracked files, with optional stash, ahead and behind counts, last-commit age, and provider pull-request and issue counts. The full status can run slow work, so it is cached per directory and refreshed by a detached worker. The status line reads the cached value and returns instantly. No temp files are touched.
+---
 
-Built from [tmux-plugin-template](https://github.com/tmux-revamped/tmux-plugin-template).
+## What it does
 
-<table>
-<tr>
-<td><strong>Non-blocking</strong><br>The status renders instantly from a cached tmux user-option while a background worker runs git.</td>
-<td><strong>No temp files</strong><br>The per-directory cache lives in tmux server options, nothing on disk.</td>
-</tr>
-<tr>
-<td><strong>Per pane</strong><br>Each entry follows the active pane's path, so split panes track different repositories.</td>
-<td><strong>Tested</strong><br>95%+ line coverage enforced in CI.</td>
-</tr>
-</table>
+`#{git}` shows the repository of the active pane: the branch, then the count of changed files, inserted and deleted lines, untracked files, merge conflicts and any rebase, merge, cherry-pick, revert, bisect or am in progress. With the default ASCII icons a dirty tree reads like this:
 
-## Placeholders
+```text
+main ~ 2 + 7 - 1 ? 3
+```
 
-Add either of these to `status-left` or `status-right`:
+Opt-in segments add staged files, stashes, commits ahead and behind, the upstream ref, commits ahead of a base branch, a linked-worktree flag, dirty submodules, the age of the last commit, a clean-tree flag, and open pull requests, review requests, issues, bugs and CI status from GitHub or GitLab.
 
-| Placeholder | Output |
-|-------------|--------|
-| `#{git}` | the full status, for example `main ~ 2 + 7 - 1 ? 3` |
-| `#{git_branch}` | the current branch only |
+Outside a repository both placeholders render nothing. A detached HEAD shows the short commit hash and the nearest tag instead of `HEAD`.
 
-Both resolve against the active pane's path and render nothing outside a repository.
+## Requirements
 
-## Install
+| Requirement | Version or note |
+|:------------|:----------------|
+| tmux | 3.2 or later |
+| bash | 3.2 or later, so the macOS `/bin/bash` works |
+| git | on `PATH` |
+| `gh` or `glab`, optional | logged in, for the provider segment and the browse action |
+| lazygit, optional | for the lazygit action |
+| [Nerd Font](https://www.nerdfonts.com), optional | for `@git_revamped_icons 'nerd'` |
 
-With [TPM](https://github.com/tmux-plugins/tpm), add to `~/.tmux.conf`:
+CI runs the suite on Linux x86_64 and arm64 with GNU and uutils coreutils, and on macOS Apple Silicon and Intel with the system BSD tools, GNU coreutils and uutils coreutils.
+
+## Installation
+
+With [TPM](https://github.com/tmux-plugins/tpm), add the plugin to `~/.tmux.conf` and press `prefix + I`:
 
 ```tmux
 set -g @plugin 'tmux-revamped/tmux-git-revamped'
-set -g status-right '#{git}'
 ```
 
-Then press `prefix + I` to install.
+Without TPM, clone the repository and run the entrypoint from `~/.tmux.conf`:
 
-Manual install:
-
-```bash
+```sh
 git clone https://github.com/tmux-revamped/tmux-git-revamped ~/.tmux/plugins/tmux-git-revamped
+```
+
+```tmux
 run-shell ~/.tmux/plugins/tmux-git-revamped/git-revamped.tmux
+```
+
+Set `status-left` or `status-right` before the plugin loads, because the entrypoint replaces the placeholders it finds there.
+
+## Usage
+
+Put a placeholder in `status-left` or `status-right`:
+
+```tmux
+set -g status-right '#{git} | %H:%M'
+```
+
+| Placeholder | Output |
+|:------------|:-------|
+| `#{git}` | the full status of the active pane's repository |
+| `#{git_branch}` | the branch name only |
+
+Turn on the segments you want:
+
+```tmux
+set -g @git_revamped_ahead_behind '1'
+set -g @git_revamped_stash '1'
+set -g @git_revamped_web '1'
+```
+
+The `doctor` subcommand prints the version, whether the path is a repository, which of `git`, `gh`, `glab` and `lazygit` were found, the detected provider, and whether tmux supports popups:
+
+```sh
+~/.tmux/plugins/tmux-git-revamped/src/git.sh doctor "$PWD"
 ```
 
 ## Configuration
 
-Each segment has a `_color` and an `_icon` option, so the icons below are defaults
-you can replace with Nerd Font glyphs.
-
 | Option | Default | Meaning |
-|--------|---------|---------|
-| `@git_revamped_interval` | `5` | seconds a cached status stays fresh |
-| `@git_revamped_max_branch` | `25` | branch length before it is shortened |
-| `@git_revamped_untracked` | `1` | set to `0` to hide the untracked count |
-| `@git_revamped_staged` | `0` | set to `1` to show the staged (indexed) count |
-| `@git_revamped_conflict` | `1` | set to `0` to hide the conflict count |
-| `@git_revamped_state` | `1` | set to `0` to hide the in-progress operation label (rebase, merge, cherry-pick, revert, bisect, am) |
-| `@git_revamped_stash` | `0` | set to `1` to show the stash count |
-| `@git_revamped_ahead_behind` | `0` | set to `1` to show commits ahead and behind |
-| `@git_revamped_autofetch` | `0` | set to `1` to fetch in the background so ahead/behind stays current; no crontab or shell-rc edits |
-| `@git_revamped_autofetch_interval` | `5` | minutes between background fetches |
-| `@git_revamped_last_commit` | `0` | set to `1` to show the last-commit age |
-| `@git_revamped_web` | `0` | set to `1` to show provider counts: PR, review, and issue on GitHub and GitLab, plus a bug count on GitHub |
-| `@git_revamped_upstream` | `0` | set to `1` to show the upstream ref, or a no-upstream `local` warning |
-| `@git_revamped_worktree` | `0` | set to `1` to flag a linked worktree |
-| `@git_revamped_submodule` | `0` | set to `1` to show the count of dirty submodules |
-| `@git_revamped_clean` | `0` | set to `1` to show a clean-tree indicator |
-| `@git_revamped_base_branch` | empty | set to a branch like `main` to show commits ahead of that base |
-| `@git_revamped_ci` | `1` | within the web path, set to `0` to hide the CI check status |
-| `@git_revamped_web_interval` | `300` | seconds the provider segment stays cached, separate from `@git_revamped_interval` so the API is not called on every status refresh |
-| `@git_revamped_web_zero` | `1` | set to `0` to hide provider counts that are zero |
-| `@git_revamped_gh_accounts` | empty | space-separated `owner=account` pairs naming the `gh` account for a repository owner, used when the project's `user.email` names none |
-| `@git_revamped_key_lazygit` | empty | key to bind for the lazygit popup, for example `g` |
-| `@git_revamped_key_menu` | `M-v` | key to bind for the branch switcher menu; `''` binds nothing |
-| `@git_revamped_key_browse` | empty | key to bind to open the repo on its provider |
-| `@git_revamped_before` | empty | format placed before the status, only when the status is not empty, for example a theme's pill opening |
+|:-------|:--------|:--------|
+| `@git_revamped_render` | unset | `options` switches to the options render mode described under How it works |
+| `@git_revamped_interval` | `5` | seconds a cached status stays fresh, and the tick of the options-mode process |
+| `@git_revamped_max_branch` | `25` | branch length before it is cut and ends in `...` |
+| `@git_revamped_untracked` | `1` | `0` hides the untracked count |
+| `@git_revamped_staged` | `0` | `1` shows the staged count |
+| `@git_revamped_conflict` | `1` | `0` hides the conflict count |
+| `@git_revamped_state` | `1` | `0` hides the rebase, merge, cherry-pick, revert, bisect or am label; a rebase or am shows its step as `X/Y` |
+| `@git_revamped_stash` | `0` | `1` shows the stash count |
+| `@git_revamped_ahead_behind` | `0` | `1` shows commits ahead of and behind the upstream |
+| `@git_revamped_autofetch` | `0` | `1` runs `git fetch --prune --tags` in the background so ahead and behind stay current |
+| `@git_revamped_autofetch_interval` | `5` | minutes between background fetches of one repository |
+| `@git_revamped_last_commit` | `0` | `1` shows the age of the last commit in `m`, `h` or `d` |
+| `@git_revamped_upstream` | `0` | `1` shows the upstream ref, or `local` when the branch has none |
+| `@git_revamped_base_branch` | empty | a branch such as `main`; shows the commits on `HEAD` that are not on it |
+| `@git_revamped_worktree` | `0` | `1` flags a linked worktree |
+| `@git_revamped_submodule` | `0` | `1` shows the count of submodules whose checkout differs from the recorded commit |
+| `@git_revamped_clean` | `0` | `1` shows a flag when nothing is modified or untracked |
+| `@git_revamped_web` | `0` | `1` adds the provider segment |
+| `@git_revamped_web_interval` | `300` | seconds the provider segment stays cached |
+| `@git_revamped_web_zero` | `1` | `0` hides provider counts that are zero |
+| `@git_revamped_ci` | `1` | `0` drops the CI status from the provider segment |
+| `@git_revamped_gh_accounts` | empty | space-separated `owner=account` pairs naming the `gh` account for a repository owner |
+| `@git_revamped_key_menu` | `M-v` | key for the branch menu; `''` binds nothing |
+| `@git_revamped_key_lazygit` | unset | key for the lazygit action |
+| `@git_revamped_key_browse` | unset | key for the browse action |
+| `@git_revamped_before` | empty | format placed before the status, only when the status is not empty |
 | `@git_revamped_after` | empty | format placed after the status, only when the status is not empty |
-| `@git_revamped_reset` | `#[default]` | style that closes every segment; set it to a plain `#[fg=...]` to keep a background set by `@git_revamped_before` |
-| `@git_revamped_icons` | `ascii` | default icon set for every segment: `ascii` uses plain characters, `nerd` uses Nerd Font glyphs; any `@git_revamped_<kind>_icon` still overrides it |
-| `@git_revamped_branch_color` | empty | branch style, for example `#[fg=cyan]` |
-| `@git_revamped_branch_icon` | empty | icon placed before the branch name |
-| `@git_revamped_changed_{color,icon}` | yellow, `~` | modified-file styling |
-| `@git_revamped_insertions_{color,icon}` | green, `+` | inserted-lines styling |
-| `@git_revamped_deletions_{color,icon}` | red, `-` | deleted-lines styling |
-| `@git_revamped_untracked_{color,icon}` | blue, `?` | untracked-file styling |
-| `@git_revamped_staged_{color,icon}` | green, `S` | staged-file styling |
-| `@git_revamped_conflict_{color,icon}` | red, `!` | conflict styling |
-| `@git_revamped_state_{color,icon}` | yellow, none | in-progress operation label styling |
-| `@git_revamped_stash_{color,icon}` | magenta, `$` | stash styling |
-| `@git_revamped_ahead_{color,icon}` | green, `^` | ahead styling |
-| `@git_revamped_behind_{color,icon}` | yellow, `v` | behind styling |
-| `@git_revamped_commit_{color,icon}` | blue, `@` | last-commit styling |
-| `@git_revamped_{pr,review,issue,bug}_{color,icon}` | see defaults | provider segment styling |
-| `@git_revamped_upstream_{color,icon}` | cyan, `->` | upstream ref styling |
-| `@git_revamped_noupstream_{color,icon}` | yellow, `!` | no-upstream warning styling |
-| `@git_revamped_divergence_{color,icon}` | magenta, `~>` | base-divergence styling |
-| `@git_revamped_worktree_{color,icon}` | cyan, `wt` | linked-worktree styling |
-| `@git_revamped_submodule_{color,icon}` | yellow, `sub` | dirty-submodule styling |
-| `@git_revamped_clean_{color,icon}` | green, `ok` | clean-tree styling |
-| `@git_revamped_ci_pass_color` | `#[fg=green]` | style of a passing CI status |
-| `@git_revamped_ci_fail_color` | `#[fg=red]` | style of a failing CI status |
-| `@git_revamped_ci_pending_color` | `#[fg=yellow]` | style of a pending CI status |
-| `@git_revamped_ci_{pass,fail,pending}_{icon,label}` | `CI`, the status name | CI status icon and label; a label set to `''` shows the icon alone |
+| `@git_revamped_reset` | `#[default]` | style that closes every segment; a plain `#[fg=...]` keeps a background set by `@git_revamped_before` |
+| `@git_revamped_icons` | `ascii` | default icon set: `ascii` or `nerd` |
 
-> [!IMPORTANT]
-> The `@git_revamped_web` segment calls the GitHub or GitLab API on every refresh
-> and needs `gh` or `glab` installed and authenticated. It is off by
-> default. Leave it off unless you accept the API calls and their rate limits.
-> On GitHub, issues labeled `bug` count toward the bug segment and are excluded
-> from the issue segment, so the two never double-count the same issue.
->
-> The web path also reports the head commit's CI status through `gh pr checks` or
-> `glab ci status`. Set `@git_revamped_ci` to `0` to skip that extra call.
->
-> The provider calls run inside the repository of the active pane, and each repository speaks to its provider as its own account. On GitHub the account is the login in the project's `user.email` when that is a GitHub noreply address, such as `299237933+octocat@users.noreply.github.com`, then the `@git_revamped_gh_accounts` entry for the repository owner, then the active `gh` account. The account's token comes from `gh auth token --user <account>`, so every account must be logged in to `gh`. GitLab is reached through the host in the repository's remote, so each GitLab instance uses the account `glab` holds for it. An SSH host alias such as `git@github-work:owner/repo.git` is resolved through `ssh -G` to find the provider.
+### Segment styles
 
-### Internal state
+Every segment reads `@git_revamped_<kind>_color` and `@git_revamped_<kind>_icon`. An icon option set to `''` shows the value alone. The branch name reads `@git_revamped_branch_color` and `@git_revamped_branch_icon`, both empty by default.
 
-The plugin manages these options itself. Do not set them.
+| Kind | Default color | `ascii` icon | `nerd` glyph |
+|:-----|:--------------|:-------------|:-------------|
+| `branch` | none | none | none |
+| `changed` | yellow | `~` | `oct-diff_modified` |
+| `insertions` | green | `+` | `oct-diff_added` |
+| `deletions` | red | `-` | `oct-diff_removed` |
+| `untracked` | blue | `?` | `md-file_question_outline` |
+| `staged` | green | `S` | `md-check_all` |
+| `conflict` | red | `!` | `oct-alert` |
+| `state` | yellow | none | `oct-git_merge` |
+| `stash` | magenta | `$` | `md-archive` |
+| `ahead` | green | `^` | `md-arrow_up` |
+| `behind` | yellow | `v` | `md-arrow_down` |
+| `commit` | blue | `@` | `oct-history` |
+| `upstream` | cyan | `->` | `oct-git_compare` |
+| `noupstream` | yellow | `!` | `md-cloud_off_outline` |
+| `divergence` | magenta | `~>` | `md-source_fork` |
+| `worktree` | cyan | `wt` | `md-folder_multiple_outline` |
+| `submodule` | yellow | `sub` | `oct-file_submodule` |
+| `clean` | green | `ok` | `md-check` |
+| `pr` | cyan | `PR` | `oct-git_pull_request` |
+| `review` | magenta | `R` | `oct-eye` |
+| `issue` | blue | `I` | `oct-issue_opened` |
+| `bug` | red | `B` | `fa-bug` |
 
-| Option | Holds |
-|--------|-------|
-| `@git_revamped_published` | space-separated metrics the status line uses, written at load so the `options` render mode publishes only those |
+The worktree and clean segments are flags and render their icon alone. The colors are the 16 ANSI names, so they follow the terminal theme.
 
-## Render mode
+The CI status has its own options. `@git_revamped_ci_pass_color`, `@git_revamped_ci_fail_color` and `@git_revamped_ci_pending_color` default to green, red and yellow. `@git_revamped_ci_<status>_icon` defaults to `CI`, or to `md-check_circle`, `md-close_circle` and `md-clock_outline` with Nerd Font icons. `@git_revamped_ci_<status>_label` defaults to the status name, and an empty label shows the icon alone.
 
-By default `#{git}` becomes a `#()` call keyed by the active pane's path, so tmux starts a new job, which renders empty until it finishes, whenever the foreground process works in another directory. Set `@git_revamped_render` to `options` and `#{git}` becomes `#{E:@git_revamped_out_status}` instead. One background process per server walks every pane every `@git_revamped_interval` seconds, 5 by default, and writes each pane's value as a pane option, so switching panes shows that pane's repository at once. A pane whose current directory is not a repository keeps the last value it showed. The process exits after its current tick when the server stops, and a config reload replaces it.
+### Provider segment
 
-```tmux
-set -g @git_revamped_render 'options'
-```
+With `@git_revamped_web` set to `1`, the status adds open pull requests, review requests, issues assigned to you and the CI status of the current branch. GitHub goes through `gh`, GitLab through `glab`, and the commands run inside the repository of the active pane. On GitHub, assigned issues labeled `bug` form their own segment and leave the issue count. GitHub lists ask for up to 1000 items, and GitLab lists read up to 10 pages of 100.
 
-## Icon sets
+The provider is read from `remote.origin.url`. An SSH host alias such as `git@github-work:owner/repo.git` is resolved through `ssh -G`. On GitHub, the account is the login in the project's `user.email` when it is a noreply address such as `299237933+octocat@users.noreply.github.com`, then the `@git_revamped_gh_accounts` entry for the repository owner, then the active `gh` account. The token comes from `gh auth token --user <account>`, so every account must be logged in to `gh`.
 
-`@git_revamped_icons` picks the default icon of every segment at once. `ascii`, the default, works in any font. `nerd` needs a [Nerd Font](https://www.nerdfonts.com) and uses these glyphs:
+A provider call that runs longer than 10 seconds is stopped, and the last value stays on screen. Each refresh calls the provider API, so `@git_revamped_web_interval` sets how often that happens.
 
-| Segment | `ascii` | `nerd` glyph |
-|---------|---------|--------------|
-| changed | `~` | `oct-diff_modified` |
-| insertions | `+` | `oct-diff_added` |
-| deletions | `-` | `oct-diff_removed` |
-| untracked | `?` | `md-file_question_outline` |
-| staged | `S` | `md-check_all` |
-| conflict | `!` | `oct-alert` |
-| state | none | `oct-git_merge` |
-| stash | `$` | `md-archive` |
-| ahead | `^` | `md-arrow_up` |
-| behind | `v` | `md-arrow_down` |
-| commit | `@` | `oct-history` |
-| pr | `PR` | `oct-git_pull_request` |
-| review | `R` | `oct-eye` |
-| issue | `I` | `oct-issue_opened` |
-| bug | `B` | `fa-bug` |
-| upstream | `->` | `oct-git_compare` |
-| noupstream | `!` | `md-cloud_off_outline` |
-| divergence | `~>` | `md-source_fork` |
-| worktree | `wt` | `md-folder_multiple_outline` |
-| submodule | `sub` | `oct-file_submodule` |
-| clean | `ok` | `md-check` |
-| CI pass, fail, pending | `CI` | `md-check_circle`, `md-close_circle`, `md-clock_outline` |
+### Theme colors
 
-The worktree and clean segments are flags, so they render their icon alone.
-
-## Actions and key bindings
-
-Three actions are available as dispatcher subcommands. The branch switcher menu is bound to `M-v` in the prefix table by default; set `@git_revamped_key_menu` to another key to move it, or to `''` to bind nothing. The lazygit and browse actions are bound only when you set their option.
-
-| Option | Action |
-|--------|--------|
-| `@git_revamped_key_lazygit` | open lazygit in a popup rooted at the pane's repository, on tmux 3.2+, with a new-window fallback on older tmux |
-| `@git_revamped_key_menu` | open a branch switcher menu and check out the chosen branch, refusing when the working tree is dirty |
-| `@git_revamped_key_browse` | open the current repository on GitHub or GitLab in your browser through `gh` or `glab` |
-
-```tmux
-set -g @git_revamped_key_lazygit 'g'
-set -g @git_revamped_key_menu 'b'
-set -g @git_revamped_key_browse 'o'
-```
-
-Each action feature-detects its tool and only runs when the pane is inside a repository. A dead key with a missing tool does nothing.
-
-## Doctor
-
-Run the capability report to see what was detected on this host and why a segment might be empty:
-
-```bash
-~/.tmux/plugins/tmux-git-revamped/src/git.sh doctor "$PWD"
-```
-
-It prints the version, whether the path is a repository, which tools were found, the detected provider, and whether tmux supports popups.
-
-## Theme color suggestions
-
-The defaults use the 16 ANSI color names, which the active terminal theme remaps,
-so the segments match any theme out of the box. For exact hex values, copy one
-block below into `~/.tmux.conf`.
-
-### Catppuccin Mocha
-
-To render the status as a Catppuccin pill that disappears outside a repository, open and close the pill around it and keep the pill's background across segments. Double quotes let tmux turn `\U000f02a2` into the git glyph Catppuccin's own git module uses:
+A Catppuccin pill that disappears outside a repository opens and closes around the status and keeps its background across segments:
 
 ```tmux
 set -g @git_revamped_before "#[fg=#{@thm_peach}]#{@catppuccin_status_left_separator}#[fg=#{@thm_crust},bg=#{@thm_peach}]\U000f02a2 #{@catppuccin_status_middle_separator}#[fg=#{@thm_fg},bg=#{@thm_surface_0}] "
@@ -217,6 +184,9 @@ set -g @git_revamped_after '#[fg=#{@thm_surface_0}]#{@catppuccin_status_right_se
 set -g @git_revamped_reset '#[fg=#{@thm_fg}]'
 ```
 
+For exact hex values, copy one block into `~/.tmux.conf`.
+
+#### Catppuccin Mocha
 
 ```tmux
 set -g @git_revamped_insertions_color '#[fg=#a6e3a1]'
@@ -233,7 +203,7 @@ set -g @git_revamped_stash_color '#[fg=#cba6f7]'
 set -g @git_revamped_review_color '#[fg=#cba6f7]'
 ```
 
-### Dracula
+#### Dracula
 
 ```tmux
 set -g @git_revamped_insertions_color '#[fg=#50fa7b]'
@@ -250,7 +220,7 @@ set -g @git_revamped_stash_color '#[fg=#ff79c6]'
 set -g @git_revamped_review_color '#[fg=#ff79c6]'
 ```
 
-### Nord
+#### Nord
 
 ```tmux
 set -g @git_revamped_insertions_color '#[fg=#a3be8c]'
@@ -267,7 +237,7 @@ set -g @git_revamped_stash_color '#[fg=#b48ead]'
 set -g @git_revamped_review_color '#[fg=#b48ead]'
 ```
 
-### Gruvbox Dark
+#### Gruvbox Dark
 
 ```tmux
 set -g @git_revamped_insertions_color '#[fg=#b8bb26]'
@@ -284,7 +254,7 @@ set -g @git_revamped_stash_color '#[fg=#d3869b]'
 set -g @git_revamped_review_color '#[fg=#d3869b]'
 ```
 
-### Tokyo Night
+#### Tokyo Night
 
 ```tmux
 set -g @git_revamped_insertions_color '#[fg=#9ece6a]'
@@ -301,7 +271,7 @@ set -g @git_revamped_stash_color '#[fg=#bb9af7]'
 set -g @git_revamped_review_color '#[fg=#bb9af7]'
 ```
 
-### Solarized Dark
+#### Solarized Dark
 
 ```tmux
 set -g @git_revamped_insertions_color '#[fg=#859900]'
@@ -318,20 +288,64 @@ set -g @git_revamped_stash_color '#[fg=#d33682]'
 set -g @git_revamped_review_color '#[fg=#d33682]'
 ```
 
-## Support by platform and architecture
+### Internal state
 
-Works on every supported platform and architecture with built-in tools. The status
-reads through `git`, which is required, on Linux (x86_64 and arm64) and macOS
-(Intel and Apple Silicon). The optional provider segment additionally needs `gh`
-for GitHub, or `glab` for GitLab; without them that segment stays empty.
+The plugin manages these options itself. Do not set them.
+
+| Option | Holds |
+|:-------|:------|
+| `@git_revamped_published` | space-separated metrics the status line uses, written at load so the options render mode publishes only those |
+| `@git_revamped_out_status`, `@git_revamped_out_branch` | pane options holding each pane's rendered value in the options render mode |
+| `@git_revamped_ticker_pid` | process id of the options-mode background process, cleared at load in the default mode so an old process exits |
+| `@git_revamped_option_names` | option names the background process reads in one call per tick |
+| `@git_revamped_status_*`, `@git_revamped_web_status_*`, `@git_revamped_fetch_status_*` | cached status, provider segment and last fetch time per repository, keyed by a checksum of the path, with `_ts` and `_lock` companions |
+
+## Key bindings
+
+| Key | Action | Default |
+|:----|:-------|:--------|
+| `prefix + M-v` | branch menu: lists local branches and checks out the chosen one, refusing while the working tree is dirty | bound |
+| `@git_revamped_key_lazygit` | lazygit in a 90% popup rooted at the pane's directory | unbound |
+| `@git_revamped_key_browse` | open the repository in the browser through `gh browse` or `glab repo view --web` | unbound |
+
+`M-v` is this plugin's slot in the family key allocation, chosen for version control because `g` is taken. Each action runs only when the pane is inside a repository and the tool it needs is installed.
+
+```tmux
+set -g @git_revamped_key_lazygit 'g'
+set -g @git_revamped_key_browse 'o'
+```
+
+## How it works
+
+```mermaid
+graph LR
+    A[status line] --> B{render mode}
+    B -->|default| C["#() job per pane path"]
+    B -->|options| D[one background process]
+    C --> E[cache in tmux options]
+    E --> F[detached refresh]
+    D --> G[pane option per pane]
+    F --> H[git status and diff]
+    D --> H
+```
+
+The entrypoint [`git-revamped.tmux`](git-revamped.tmux) replaces each placeholder in `status-left` and `status-right`.
+
+In the default mode a placeholder becomes a `#()` call to [`src/git.sh`](src/git.sh) with `#{q:pane_current_path}`. The call prints the cached value for that path at once. When the value is older than `@git_revamped_interval`, it starts a detached refresh that runs `git status`, `git diff --numstat` and the other reads, all with `--no-optional-locks`. A lock option keeps two refreshes of one repository from running together. Because tmux starts a new job for every new path, the segment renders empty until that job finishes when the foreground program works in another directory.
+
+With `@git_revamped_render` set to `options`, a placeholder becomes `#{E:@git_revamped_out_status}` or `#{E:@git_revamped_out_branch}`. One background process per server walks every pane every `@git_revamped_interval` seconds and writes each pane's value as a pane option, so switching panes shows that pane's repository at once. A pane outside a repository keeps its last value. The process exits after its current tick when the server stops, and a config reload replaces it.
+
+Branch, tag and upstream names have every `#` doubled before they reach the status line, so a name such as `fix/#(cmd)` shows literally.
 
 ## Development
 
-```bash
-make test    # bats suite
-make lint    # shellcheck
-make coverage  # kcov line coverage on Linux
-```
+| Command | What it runs |
+|:--------|:-------------|
+| `make test` | the bats suite under [`test/`](test) |
+| `make lint` | shellcheck at warning severity on every shell file and [`family/bin/`](family/bin) |
+| `make coverage` | kcov line coverage on Linux, failing below 95% |
+
+The parsers in [`src/lib/git/git.sh`](src/lib/git/git.sh) and the renderers in [`src/lib/git/render.sh`](src/lib/git/render.sh) are pure functions over git output. The git, `gh` and `glab` calls sit behind small wrappers, so most tests need no repository and no network.
 
 ## License
 
@@ -358,26 +372,26 @@ memory, and `family/bin/sweep` is how it is discharged.
 | [`tmux-bluetooth-revamped`](https://github.com/tmux-revamped/tmux-bluetooth-revamped) | Every connected Bluetooth device and its battery in your tmux status bar, without blocking the render |
 | [`tmux-cpu-revamped`](https://github.com/tmux-revamped/tmux-cpu-revamped) | CPU load, temperature, and frequency in your tmux status bar, without ever blocking the render |
 | [`tmux-disk-revamped`](https://github.com/tmux-revamped/tmux-disk-revamped) | Disk usage for your tmux status bar, without ever blocking the status render |
-| [`tmux-extract-revamped`](https://github.com/tmux-revamped/tmux-extract-revamped) | Fuzzy-grab any URL, path, or word off the screen and paste it, pure shell, no Python |
-| [`tmux-fzf-revamped`](https://github.com/tmux-revamped/tmux-fzf-revamped) | Jump to any session, window, or pane, or kill it, from one fzf popup |
-| [`tmux-git-revamped`](https://github.com/tmux-revamped/tmux-git-revamped) | **this plugin**, Git repository status in your tmux status bar, without ever blocking the render |
-| [`tmux-gpu-revamped`](https://github.com/tmux-revamped/tmux-gpu-revamped) | GPU load, temperature, frequency, and memory for your tmux status bar |
-| [`tmux-kube-revamped`](https://github.com/tmux-revamped/tmux-kube-revamped) | Current Kubernetes context and namespace in your tmux status bar, async, kubectl-free, never blocking |
+| [`tmux-extract-revamped`](https://github.com/tmux-revamped/tmux-extract-revamped) | Pick a URL, path, hash or any other token off the screen with fzf and type it at the cursor, in pure shell |
+| [`tmux-fzf-revamped`](https://github.com/tmux-revamped/tmux-fzf-revamped) | Switch to, kill, rename or create tmux sessions, windows and panes from fzf pickers in a popup |
+| [`tmux-git-revamped`](https://github.com/tmux-revamped/tmux-git-revamped) | **this plugin**, Show the active pane's git branch, changes and provider counts in the tmux status bar without blocking it |
+| [`tmux-gpu-revamped`](https://github.com/tmux-revamped/tmux-gpu-revamped) | GPU load, temperature, clock, power and memory in the tmux status bar, from NVIDIA, AMD, Intel and Apple GPUs |
+| [`tmux-kube-revamped`](https://github.com/tmux-revamped/tmux-kube-revamped) | Current Kubernetes context and namespace in the tmux status bar, parsed from kubeconfig without kubectl |
 | [`tmux-launcher-revamped`](https://github.com/tmux-revamped/tmux-launcher-revamped) | Launch any TUI app in a popup or a window, scoped to the current pane's directory, with one configurable bindi |
 | [`tmux-logging-revamped`](https://github.com/tmux-revamped/tmux-logging-revamped) | Capture any pane to a file: live logging, full scrollback, or a one-shot screenshot |
 | [`tmux-music-revamped`](https://github.com/tmux-revamped/tmux-music-revamped) | Now playing in your tmux status bar, without ever blocking the status render |
 | [`tmux-network-revamped`](https://github.com/tmux-revamped/tmux-network-revamped) | Network throughput in your tmux status bar, without ever blocking the render |
 | [`tmux-pain-control-revamped`](https://github.com/tmux-revamped/tmux-pain-control-revamped) | Standard pane and window management bindings for tmux, version aware, vim friendly, and fully configurable |
-| [`tmux-persist-revamped`](https://github.com/tmux-revamped/tmux-persist-revamped) | Save, auto-save, and restore your whole tmux environment, one plugin, no status-line tricks |
+| [`tmux-persist-revamped`](https://github.com/tmux-revamped/tmux-persist-revamped) | Save every tmux session, window and pane, auto-save on a timer, and restore it all after a reboot |
 | [`tmux-plugin-template`](https://github.com/tmux-revamped/tmux-plugin-template) | A template for building non-blocking tmux status plugins |
-| [`tmux-pomodoro-revamped`](https://github.com/tmux-revamped/tmux-pomodoro-revamped) | A Pomodoro timer in your tmux status bar, with zero temp files: all state lives in tmux options |
-| [`tmux-ram-revamped`](https://github.com/tmux-revamped/tmux-ram-revamped) | RAM usage for your tmux status bar, without ever blocking the status render |
-| [`tmux-reorder-revamped`](https://github.com/tmux-revamped/tmux-reorder-revamped) | Drag a window tab on the status bar with the mouse to move that window |
-| [`tmux-scroll-revamped`](https://github.com/tmux-revamped/tmux-scroll-revamped) | Mouse wheel that does the right thing: scroll the app directly, copy-mode everywhere else. No app names to con |
-| [`tmux-sensible-revamped`](https://github.com/tmux-revamped/tmux-sensible-revamped) | Sensible tmux defaults that normalize behavior across every tmux version, OS, and terminal, without clobbering |
+| [`tmux-pomodoro-revamped`](https://github.com/tmux-revamped/tmux-pomodoro-revamped) | A Pomodoro timer in the tmux status bar that keeps all of its state in tmux options, with no temp files |
+| [`tmux-ram-revamped`](https://github.com/tmux-revamped/tmux-ram-revamped) | RAM, swap and memory pressure in the tmux status bar, sampled in the background so the render never waits |
+| [`tmux-reorder-revamped`](https://github.com/tmux-revamped/tmux-reorder-revamped) | Drag a window tab along the tmux status bar with the mouse to move that window |
+| [`tmux-scroll-revamped`](https://github.com/tmux-revamped/tmux-scroll-revamped) | Send the mouse wheel to apps that scroll themselves and into tmux copy-mode everywhere else |
+| [`tmux-sensible-revamped`](https://github.com/tmux-revamped/tmux-sensible-revamped) | Sensible tmux defaults, gated by tmux version and terminal, that leave the options you set alone |
 | [`tmux-tiling-revamped`](https://github.com/tmux-revamped/tmux-tiling-revamped) | BSP tiling window management for tmux. Eight layouts, nineteen operations, zero dependencies |
-| [`tmux-time-revamped`](https://github.com/tmux-revamped/tmux-time-revamped) | Local clock and world clocks in your tmux status bar, without ever blocking the render |
-| [`tmux-weather-revamped`](https://github.com/tmux-revamped/tmux-weather-revamped) | Weather in your tmux status bar, fetched in the background so the render never waits on the network |
+| [`tmux-time-revamped`](https://github.com/tmux-revamped/tmux-time-revamped) | Local and world clocks for the tmux status bar, colored by time of day, with countdowns and a DST warning |
+| [`tmux-weather-revamped`](https://github.com/tmux-revamped/tmux-weather-revamped) | Weather for the tmux status bar from wttr.in, fetched in the background so the status line never waits |
 
 ### Checking an installation
 
