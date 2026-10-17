@@ -264,3 +264,14 @@ teardown() {
   # Assert
   [[ "$(sed -n 4p "${BATS_TEST_TMPDIR}/rec")" == "feat##(id)" ]]
 }
+
+@test "actions.sh - git_doctor does not report jq, which nothing uses" {
+  # Arrange
+  has_command() { return 0; }
+
+  # Act
+  run git_doctor "${TEST_TMPDIR}"
+
+  # Assert
+  [[ "${output}" != *"tool jq"* ]]
+}
