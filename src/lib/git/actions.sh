@@ -71,6 +71,30 @@ git_action_lazygit() {
   fi
 }
 
+_git_menu_label() {
+  local text="${1}" out="" char i
+  for ((i = 0; i < ${#text}; i++)); do
+    char="${text:i:1}"
+    [[ "${char}" == "#" ]] && char="##"
+    out="${out}${char}"
+  done
+  printf '%s' "${out}"
+}
+
+_git_menu_command() {
+  local shell out="" char i
+  shell="$(printf '%q checkout %q %q' "${GIT_ACTION_CMD}" "${1}" "${2}")"
+  for ((i = 0; i < ${#shell}; i++)); do
+    char="${shell:i:1}"
+    case "${char}" in
+      "#") char="####" ;;
+      "\\" | '"' | '$') char="\\${char}" ;;
+    esac
+    out="${out}${char}"
+  done
+  printf 'run-shell "%s"' "${out}"
+}
+
 # git_action_menu DIR -> show a branch-checkout menu for DIR. Refuses when the
 # tree is dirty so an in-flight change is never clobbered. No-op outside a repo.
 git_action_menu() {
@@ -87,9 +111,9 @@ git_action_menu() {
   local args=() count=0 b
   while IFS= read -r b; do
     [[ -z "${b}" ]] && continue
-    args[count]="${b}"
+    args[count]="$(_git_menu_label "${b}")"
     args[count + 1]=""
-    args[count + 2]="run-shell \"${GIT_ACTION_CMD} checkout '${dir}' '${b}'\""
+    args[count + 2]="$(_git_menu_command "${dir}" "${b}")"
     count=$(( count + 3 ))
   done <<EOF
 ${list}
@@ -167,6 +191,8 @@ export -f _git_checkout
 export -f _gh_browse
 export -f _glab_browse
 export -f git_action_lazygit
+export -f _git_menu_label
+export -f _git_menu_command
 export -f git_action_menu
 export -f git_action_checkout
 export -f git_action_browse

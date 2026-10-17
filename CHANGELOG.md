@@ -41,6 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The branch menu built each checkout command by pasting the branch name and
+  directory inside quotes, so a name holding `'`, `"`, `$`, or `#` could break
+  the command or run code. Both are now shell-quoted and escaped for tmux, and
+  a `#` in a menu label shows literally.
 - A directory name holding a `'` could end the quoting around the pane path in
   the status job and the key bindings and run the rest as a command. The path
   is now passed through tmux's `#{q:}` shell quoting.

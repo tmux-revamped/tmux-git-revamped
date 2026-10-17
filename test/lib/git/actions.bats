@@ -225,3 +225,41 @@ teardown() {
   [[ "${output}" == *"repo: no /repo"* ]]
   [[ "${output}" != *"provider:"* ]]
 }
+
+@test "actions.sh - a menu entry hands an unusual branch and path to checkout intact" {
+  # Arrange
+  local stub="${BATS_TEST_TMPDIR}/checkout.sh"
+  printf '#!/bin/sh\nprintf "%%s|%%s|%%s" "$1" "$2" "$3"\n' > "${stub}"
+  chmod +x "${stub}"
+  GIT_ACTION_CMD="${stub}"
+  local dir="${BATS_TEST_TMPDIR}/it's \$HOME"
+  local branch="fix/#1-\"a\"\$(touch pwned)'b"
+  local command
+  command="$(_git_menu_command "${dir}" "${branch}")"
+  command="${command//##/#}"
+  command="${command//##/#}"
+  command="${command#run-shell \"}"
+  command="${command%\"}"
+  command="$(printf '%s' "${command}" | sed -e 's/\\\(.\)/\1/g')"
+
+  # Act
+  run sh -c "cd \"${BATS_TEST_TMPDIR}\" && ${command}"
+
+  # Assert
+  [ ! -e "${BATS_TEST_TMPDIR}/pwned" ]
+  [[ "${output}" == "checkout|${dir}|${branch}" ]]
+}
+
+@test "actions.sh - a hash in a branch name is doubled in the menu label" {
+  # Arrange
+  has_command() { return 0; }
+  _git_is_clean() { return 0; }
+  _git_branch_list() { printf 'feat#(id)\n'; }
+  _tmux() { printf '%s\n' "$@" >> "${BATS_TEST_TMPDIR}/rec"; }
+
+  # Act
+  git_action_menu /repo
+
+  # Assert
+  [[ "$(sed -n 4p "${BATS_TEST_TMPDIR}/rec")" == "feat##(id)" ]]
+}
