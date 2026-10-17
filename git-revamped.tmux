@@ -76,6 +76,8 @@ update_option "status-right"
 
 if [[ "${render_mode}" == "options" ]]; then
   "${GIT_CMD}" start 2>/dev/null || true
+else
+  tmux set-option -gqu "@git_revamped_ticker_pid"
 fi
 
 bind_action_key "@git_revamped_key_lazygit" "lazygit"

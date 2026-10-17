@@ -65,3 +65,15 @@ teardown() {
 
   [[ "$(cat "$(_mock_opt_file @git_revamped_published)")" == "status" ]]
 }
+
+@test "entry - jobs mode releases a ticker left running by options mode" {
+  # Arrange
+  tmux set-option -gq "@git_revamped_ticker_pid" "4242"
+  tmux set-option -gq "status-right" "[#{git}]"
+
+  # Act
+  bash "${ENTRY}"
+
+  # Assert
+  [ ! -f "$(_mock_opt_file @git_revamped_ticker_pid)" ]
+}
