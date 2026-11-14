@@ -458,26 +458,32 @@ wait_for_path() {
 }
 
 @test "git.sh dispatcher - gh uses the account named by the project email" {
+  # Arrange
   _git_remote_url() { echo "git@github-acme:acme-corp/r.git"; }
   _ssh_hostname() { echo "github.com"; }
   _git_user_email() { echo "583231+acme-ci@users.noreply.github.com"; }
   _gh_token_for() { echo "token-for-${1}"; }
   _git_web_counts() { echo "token=${GH_TOKEN:-none}"; }
 
+  # Act
   run git_web_segment "${BATS_TEST_TMPDIR}"
 
+  # Assert
   [[ "${output}" == "token=token-for-acme-ci" ]]
 }
 
 @test "git.sh dispatcher - gh falls back to the owner map without a noreply email" {
+  # Arrange
   set_tmux_option "@git_revamped_gh_accounts" "acme-corp=acme-bot octocat=octocat"
   _git_remote_url() { echo "https://github.com/acme-corp/r"; }
   _git_user_email() { echo "someone@example.com"; }
   _gh_token_for() { echo "token-for-${1}"; }
   _git_web_counts() { echo "token=${GH_TOKEN:-none}"; }
 
+  # Act
   run git_web_segment "${BATS_TEST_TMPDIR}"
 
+  # Assert
   [[ "${output}" == "token=token-for-acme-bot" ]]
 }
 
@@ -503,12 +509,15 @@ wait_for_path() {
 }
 
 @test "git.sh dispatcher - a host alias resolves to its provider" {
+  # Arrange
   _git_remote_url() { echo "git@github-acmelabs:AcmeLabs/api.git"; }
   _ssh_hostname() { [[ "${1}" == "github-acmelabs" ]] && echo "github.com"; }
   _git_web_counts() { echo "provider=${2}"; }
 
+  # Act
   run git_web_segment "${BATS_TEST_TMPDIR}"
 
+  # Assert
   [[ "${output}" == "provider=github" ]]
 }
 

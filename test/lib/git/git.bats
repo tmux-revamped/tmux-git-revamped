@@ -205,15 +205,25 @@ teardown() {
 }
 
 @test "git.sh lib - login comes from a plain noreply email" {
-  run gh_login_from_email "octocat@users.noreply.github.com"
+  # Arrange
+  local email="octocat@users.noreply.github.com"
 
-  [[ "${output}" == "octocat" ]]
+  # Act
+  run gh_login_from_email "${email}"
+
+  # Assert
+  [ "${output}" = "octocat" ]
 }
 
 @test "git.sh lib - login drops the numeric id of a noreply email" {
-  run gh_login_from_email "583231+acme-ci@users.noreply.github.com"
+  # Arrange
+  local email="583231+acme-ci@users.noreply.github.com"
 
-  [[ "${output}" == "acme-ci" ]]
+  # Act
+  run gh_login_from_email "${email}"
+
+  # Assert
+  [ "${output}" = "acme-ci" ]
 }
 
 @test "git.sh lib - a regular email names no login" {
@@ -222,36 +232,102 @@ teardown() {
   [ -z "${output}" ]
 }
 
-@test "git.sh lib - owner and host come from an scp-like url" {
-  [[ "$(owner_from_url "git@github-acme:acme-corp/acme_app.git")" == "acme-corp" ]]
-  [[ "$(host_from_url "git@github-acme:acme-corp/acme_app.git")" == "github-acme" ]]
+@test "git.sh lib - owner comes from an scp-like url" {
+  # Arrange
+  local url="git@github-acme:acme-corp/acme_app.git"
+
+  # Act
+  run owner_from_url "${url}"
+
+  # Assert
+  [ "${output}" = "acme-corp" ]
 }
 
-@test "git.sh lib - owner and host come from an https url" {
-  [[ "$(owner_from_url "https://github.com/octocat/hello-world.git")" == "octocat" ]]
-  [[ "$(host_from_url "https://github.com/octocat/hello-world.git")" == "github.com" ]]
+@test "git.sh lib - host comes from an scp-like url" {
+  # Arrange
+  local url="git@github-acme:acme-corp/acme_app.git"
+
+  # Act
+  run host_from_url "${url}"
+
+  # Assert
+  [ "${output}" = "github-acme" ]
 }
 
-@test "git.sh lib - owner and host come from an ssh url" {
-  [[ "$(owner_from_url "ssh://git@github.com/AcmeLabs/api.git")" == "AcmeLabs" ]]
-  [[ "$(host_from_url "ssh://git@github.com/AcmeLabs/api.git")" == "github.com" ]]
+@test "git.sh lib - owner comes from an https url" {
+  # Arrange
+  local url="https://github.com/octocat/hello-world.git"
+
+  # Act
+  run owner_from_url "${url}"
+
+  # Assert
+  [ "${output}" = "octocat" ]
+}
+
+@test "git.sh lib - host comes from an https url" {
+  # Arrange
+  local url="https://github.com/octocat/hello-world.git"
+
+  # Act
+  run host_from_url "${url}"
+
+  # Assert
+  [ "${output}" = "github.com" ]
+}
+
+@test "git.sh lib - owner comes from an ssh url" {
+  # Arrange
+  local url="ssh://git@github.com/AcmeLabs/api.git"
+
+  # Act
+  run owner_from_url "${url}"
+
+  # Assert
+  [ "${output}" = "AcmeLabs" ]
+}
+
+@test "git.sh lib - host comes from an ssh url" {
+  # Arrange
+  local url="ssh://git@github.com/AcmeLabs/api.git"
+
+  # Act
+  run host_from_url "${url}"
+
+  # Assert
+  [ "${output}" = "github.com" ]
 }
 
 @test "git.sh lib - the owner map names the matching account" {
-  run git_account_for_owner "acme-corp" "octocat=octocat acme-corp=acme-bot"
+  # Arrange
+  local map="octocat=octocat acme-corp=acme-bot"
 
-  [[ "${output}" == "acme-bot" ]]
+  # Act
+  run git_account_for_owner "acme-corp" "${map}"
+
+  # Assert
+  [ "${output}" = "acme-bot" ]
 }
 
 @test "git.sh lib - the owner map names nothing for an unknown owner" {
-  run git_account_for_owner "other" "octocat=octocat"
+  # Arrange
+  local map="octocat=octocat"
 
+  # Act
+  run git_account_for_owner "other" "${map}"
+
+  # Assert
   [ -z "${output}" ]
 }
 
 @test "git.sh lib - an empty owner names no account" {
-  run git_account_for_owner "" "octocat=octocat"
+  # Arrange
+  local map="octocat=octocat"
 
+  # Act
+  run git_account_for_owner "" "${map}"
+
+  # Assert
   [ -z "${output}" ]
 }
 
