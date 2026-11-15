@@ -335,9 +335,15 @@ teardown() {
 }
 
 @test "git.sh dispatcher - doctor subcommand prints a capability report" {
+  # Arrange
+  local expected_version="version: 2.0.0"
+
+  # Act
   run main doctor /repo
+
+  # Assert
   [[ "${output}" == *"tmux-git-revamped doctor"* ]]
-  [[ "${output}" == *"version: 1.2.0"* ]]
+  [[ "${output}" == *"${expected_version}"* ]]
   [[ "${output}" == *"tool git:"* ]]
 }
 

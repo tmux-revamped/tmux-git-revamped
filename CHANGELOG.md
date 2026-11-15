@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-15
+
 ### Added
 
 - `@git_revamped_render 'options'` replaces the `#()` calls with pane option
@@ -34,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** the branch menu is now bound to `prefix + M-v` by default, the
+  key the family allocation gives this plugin, where it used to stay unbound
+  until `@git_revamped_key_menu` was set. Set the option to `''` to keep it
+  unbound. The lazygit and browse actions stay unbound.
 - The options-mode background process reads every option it needs in one tmux
   call per tick, sends its cache writes and published values in a second, and
   keeps its functions out of the environment of the commands it runs. Options
