@@ -128,18 +128,28 @@ teardown() {
   [[ "$(cat "${BATS_TEST_TMPDIR}/rec")" == *"new-window"* ]]
 }
 
-@test "actions.sh - lazygit is a no-op outside a repo" {
+@test "actions.sh - lazygit outside a repository says so" {
+  # Arrange
   is_git_repo() { return 1; }
   _tmux() { _rec "$@"; }
+
+  # Act
   git_action_lazygit /repo
-  [[ ! -f "${BATS_TEST_TMPDIR}/rec" ]]
+
+  # Assert
+  [[ "$(<"${BATS_TEST_TMPDIR}/rec")" == "display-message git-revamped: this pane is not in a git repository" ]]
 }
 
-@test "actions.sh - lazygit is a no-op when lazygit is missing" {
+@test "actions.sh - lazygit says so when lazygit is not installed, instead of a popup that closes at once" {
+  # Arrange
   has_command() { return 1; }
   _tmux() { _rec "$@"; }
+
+  # Act
   git_action_lazygit /repo
-  [[ ! -f "${BATS_TEST_TMPDIR}/rec" ]]
+
+  # Assert
+  [[ "$(<"${BATS_TEST_TMPDIR}/rec")" == "display-message git-revamped: lazygit is not installed" ]]
 }
 
 @test "actions.sh - menu builds a branch menu when the tree is clean" {
@@ -162,20 +172,30 @@ teardown() {
   [[ "$(cat "${BATS_TEST_TMPDIR}/rec")" == *"dirty"* ]]
 }
 
-@test "actions.sh - menu is a no-op with no branches" {
+@test "actions.sh - menu says so with no branch" {
+  # Arrange
   has_command() { return 0; }
   _git_is_clean() { return 0; }
   _git_branch_list() { echo ""; }
   _tmux() { _rec "$@"; }
+
+  # Act
   git_action_menu /repo
-  [[ ! -f "${BATS_TEST_TMPDIR}/rec" ]]
+
+  # Assert
+  [[ "$(<"${BATS_TEST_TMPDIR}/rec")" == "display-message git-revamped: no branch to switch to yet" ]]
 }
 
-@test "actions.sh - menu is a no-op outside a repo" {
+@test "actions.sh - menu outside a repository says so" {
+  # Arrange
   is_git_repo() { return 1; }
   _tmux() { _rec "$@"; }
+
+  # Act
   git_action_menu /repo
-  [[ ! -f "${BATS_TEST_TMPDIR}/rec" ]]
+
+  # Assert
+  [[ "$(<"${BATS_TEST_TMPDIR}/rec")" == "display-message git-revamped: this pane is not in a git repository" ]]
 }
 
 @test "actions.sh - menu is a no-op when git is missing" {
@@ -220,20 +240,73 @@ teardown() {
   [[ "$(cat "${BATS_TEST_TMPDIR}/rec")" == "glab /repo" ]]
 }
 
-@test "actions.sh - browse is a no-op for an unknown provider" {
+@test "actions.sh - browse says so for a remote that is neither GitHub nor GitLab" {
+  # Arrange
   _git_remote_url() { echo "https://example.com/o/r"; }
   has_command() { return 0; }
   _gh_browse() { _rec gh; }
   _glab_browse() { _rec glab; }
+  _tmux() { _rec "$@"; }
+
+  # Act
   git_action_browse /repo
-  [[ ! -f "${BATS_TEST_TMPDIR}/rec" ]]
+
+  # Assert
+  [[ "$(<"${BATS_TEST_TMPDIR}/rec")" == "display-message git-revamped: no GitHub or GitLab remote to open" ]]
 }
 
-@test "actions.sh - browse is a no-op outside a repo" {
+@test "actions.sh - browse outside a repository says so" {
+  # Arrange
   is_git_repo() { return 1; }
   _gh_browse() { _rec gh; }
+  _tmux() { _rec "$@"; }
+
+  # Act
   git_action_browse /repo
-  [[ ! -f "${BATS_TEST_TMPDIR}/rec" ]]
+
+  # Assert
+  [[ "$(<"${BATS_TEST_TMPDIR}/rec")" == "display-message git-revamped: this pane is not in a git repository" ]]
+}
+
+@test "actions.sh - browse names the provider tool that is not installed" {
+  # Arrange
+  local first
+  _git_remote_url() { echo "https://github.com/o/r"; }
+  has_command() { return 1; }
+  _tmux() { _rec "$@"; }
+  git_action_browse /repo
+  first="$(<"${BATS_TEST_TMPDIR}/rec")"
+  : >"${BATS_TEST_TMPDIR}/rec"
+  _git_remote_url() { echo "git@gitlab.com:o/r.git"; }
+
+  # Act
+  git_action_browse /repo
+
+  # Assert
+  [[ "${first}" == "display-message git-revamped: gh is not installed" ]]
+  [[ "$(<"${BATS_TEST_TMPDIR}/rec")" == "display-message git-revamped: glab is not installed" ]]
+}
+
+@test "actions.sh - browse says so when the provider tool fails, and still succeeds so the key shows no raw error" {
+  # Arrange
+  local first
+  _git_remote_url() { echo "https://github.com/o/r"; }
+  has_command() { return 0; }
+  _gh_browse() { return 4; }
+  _glab_browse() { return 1; }
+  _tmux() { _rec "$@"; }
+  git_action_browse /repo
+  first="$(<"${BATS_TEST_TMPDIR}/rec")"
+  : >"${BATS_TEST_TMPDIR}/rec"
+  _git_remote_url() { echo "git@gitlab.com:o/r.git"; }
+
+  # Act
+  run git_action_browse /repo
+
+  # Assert
+  [[ "${status}" -eq 0 ]]
+  [[ "${first}" == "display-message git-revamped: gh could not open the repository page" ]]
+  [[ "$(<"${BATS_TEST_TMPDIR}/rec")" == "display-message git-revamped: glab could not open the repository page" ]]
 }
 
 @test "actions.sh - _doctor_tool reports found and missing" {

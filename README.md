@@ -310,7 +310,7 @@ The plugin manages these options itself. Do not set them.
 | `@git_revamped_key_lazygit` | lazygit in a 90% popup rooted at the pane's directory | unbound |
 | `@git_revamped_key_browse` | open the repository in the browser through `gh browse` or `glab repo view --web` | unbound |
 
-`M-v` is this plugin's slot in the family key allocation, chosen for version control because `g` is taken. Each action runs only when the pane is inside a repository and the tool it needs is installed.
+`M-v` is this plugin's slot in the family key allocation, chosen for version control because `g` is taken. Each action runs only when the pane is inside a repository and the tool it needs is installed; otherwise the key says why in a tmux message, as it does when `gh` or `glab` cannot open the page.
 
 ```tmux
 set -g @git_revamped_key_lazygit 'g'

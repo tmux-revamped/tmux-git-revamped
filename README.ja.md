@@ -310,7 +310,7 @@ set -g @git_revamped_review_color '#[fg=#d33682]'
 | `@git_revamped_key_lazygit` | ペインのディレクトリを起点に、90%のポップアップでlazygitを開きます | 未バインド |
 | `@git_revamped_key_browse` | `gh browse`または`glab repo view --web`でリポジトリをブラウザーで開きます | 未バインド |
 
-`M-v`はファミリーのキー割り当てにおけるこのプラグインの枠で、`g`が使用済みのためversion controlから選ばれました。各アクションは、ペインがリポジトリ内にあり、必要なツールがインストールされているときだけ実行されます。
+`M-v`はファミリーのキー割り当てにおけるこのプラグインの枠で、`g`が使用済みのためversion controlから選ばれました。各アクションは、ペインがリポジトリ内にあり、必要なツールがインストールされているときだけ実行されます。そうでない場合、または`gh`や`glab`がページを開けない場合、キーはその理由をtmuxのメッセージで伝えます。
 
 ```tmux
 set -g @git_revamped_key_lazygit 'g'

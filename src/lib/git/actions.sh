@@ -47,10 +47,20 @@ _glab_browse() {
   ) >/dev/null 2>&1
 }
 
+_git_say() { _tmux display-message "git-revamped: ${1}"; }
+
+_git_outside() { _git_say "this pane is not in a git repository"; }
+
 git_action_lazygit() {
   local dir="${1}" start
-  is_git_repo "${dir}" || return 0
-  has_command lazygit || return 0
+  if ! is_git_repo "${dir}"; then
+    _git_outside
+    return 0
+  fi
+  if ! has_command lazygit; then
+    _git_say "lazygit is not installed"
+    return 0
+  fi
   start="$(_git_menu_label "${dir}")"
   if tmux_has_popup "$(_tmux_version)"; then
     _tmux display-popup -d "${start}" -E -w 90% -h 90% "lazygit"
@@ -85,7 +95,10 @@ _git_menu_command() {
 
 git_action_menu() {
   local dir="${1}"
-  is_git_repo "${dir}" || return 0
+  if ! is_git_repo "${dir}"; then
+    _git_outside
+    return 0
+  fi
   has_command git || return 0
   if ! _git_is_clean "${dir}"; then
     _tmux display-message "git-revamped: working tree dirty, not switching branch"
@@ -93,7 +106,10 @@ git_action_menu() {
   fi
   local list
   list="$(_git_branch_list "${dir}")"
-  [[ -z "${list}" ]] && return 0
+  if [[ -z "${list}" ]]; then
+    _git_say "no branch to switch to yet"
+    return 0
+  fi
   local args=() count=0 b
   while IFS= read -r b; do
     [[ -z "${b}" ]] && continue
@@ -115,15 +131,31 @@ git_action_checkout() {
 }
 
 git_action_browse() {
-  local dir="${1}" url provider
-  is_git_repo "${dir}" || return 0
+  local dir="${1}" url provider tool
+  if ! is_git_repo "${dir}"; then
+    _git_outside
+    return 0
+  fi
   url="$(_git_remote_url "${dir}")"
   provider="$(provider_from_url "${url}")"
-  if [[ "${provider}" == "github" ]] && has_command gh; then
-    _gh_browse "${dir}"
-  elif [[ "${provider}" == "gitlab" ]] && has_command glab; then
-    _glab_browse "${dir}"
+  case "${provider}" in
+    github) tool="gh" ;;
+    gitlab) tool="glab" ;;
+    *)
+      _git_say "no GitHub or GitLab remote to open"
+      return 0
+      ;;
+  esac
+  if ! has_command "${tool}"; then
+    _git_say "${tool} is not installed"
+    return 0
   fi
+  if [[ "${tool}" == "gh" ]]; then
+    _gh_browse "${dir}" && return 0
+  else
+    _glab_browse "${dir}" && return 0
+  fi
+  _git_say "${tool} could not open the repository page"
 }
 
 _doctor_tool() {

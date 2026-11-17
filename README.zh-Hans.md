@@ -310,7 +310,7 @@ set -g @git_revamped_review_color '#[fg=#d33682]'
 | `@git_revamped_key_lazygit` | 在以窗格目录为根的 90% 弹出窗口中打开 lazygit | 未绑定 |
 | `@git_revamped_key_browse` | 通过 `gh browse` 或 `glab repo view --web` 在浏览器中打开仓库 | 未绑定 |
 
-`M-v` 是本插件在家族按键分配中的位置，取 version control 之意，因为 `g` 已被占用。每个动作只在窗格位于仓库中且所需工具已安装时运行。
+`M-v` 是本插件在家族按键分配中的位置，取 version control 之意，因为 `g` 已被占用。每个动作只在窗格位于仓库中且所需工具已安装时运行；否则，或者 `gh`、`glab` 无法打开页面时，按键会用一条 tmux 消息说明原因。
 
 ```tmux
 set -g @git_revamped_key_lazygit 'g'

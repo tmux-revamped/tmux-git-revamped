@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The browse key ended in tmux's raw `returned 4` screen when `gh` failed. It
+  now says `gh could not open the repository page` in a message.
+- The menu, lazygit and browse keys ended in silence when they could not act.
+  Each now says why: outside a repository, no branch, a tool that is not
+  installed, or a remote that is neither GitHub nor GitLab.
+
 ## [2.0.1] - 2026-11-17
 
 ### Fixed

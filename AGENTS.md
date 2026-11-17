@@ -13,7 +13,7 @@ Guidance for anyone, human or agent, changing tmux-git-revamped. What it is and 
 | [`src/lib/git/`](src/lib/git) | This member's modules |
 | [`src/lib/utils/constants.sh`](src/lib/utils/constants.sh) | This member's constants, including its version |
 | [`src/lib/utils/`](src/lib/utils), [`src/lib/tmux/`](src/lib/tmux) | The shared library. Every file there except `constants.sh` is identical in every member |
-| [`test/`](test) | The bats suite. `helpers.bash` and `tmux_helpers.bash` are identical in every member; this member's own mocks go in the `_local` files |
+| [`test/`](test) | The bats suite. `helpers.bash` and `tmux_helpers.bash` are identical in every member; this member's own mocks go in the `_local` files. [`test/entry/keys.bats`](test/entry/keys.bats) presses the three keys through a second tmux attached to a private server, in a repository it creates, with stand-ins for `gh` and `lazygit` |
 
 ## Names
 
@@ -26,7 +26,7 @@ Guidance for anyone, human or agent, changing tmux-git-revamped. What it is and 
 ## Behaviour
 
 - Shows the active pane's git branch, changes and provider counts in the status line without blocking it.
-- `M-v` opens the git menu.
+- `M-v` opens the branch menu; lazygit and browse have opt-in keys. A key that cannot act says why in a tmux message and exits 0, so it never ends in silence or in tmux's raw error screen: outside a repository, with no branch, without `lazygit`, `gh` or `glab`, with a remote that is neither GitHub nor GitLab, or when the provider tool fails.
 - By default a placeholder becomes a `#()` call with `#{q:pane_current_path}` that prints the cached value for that path at once; a value older than `@git_revamped_interval` starts a detached refresh.
 - With `@git_revamped_render` set to `options`, one background process per server walks every pane and writes each pane's value as a pane option, so switching panes shows that pane's repository at once.
 
@@ -42,7 +42,7 @@ Guidance for anyone, human or agent, changing tmux-git-revamped. What it is and 
 
 ## Gaps against FAMILY.md
 
-As of 2026-11-16:
+As of 2026-11-17:
 
 - Every script is bash, under `#!/usr/bin/env bash`, not POSIX `sh`, so it is untested under `dash`, `zsh` and BusyBox `sh`.
 - The code lives in [`src/`](src) and [`src/lib/`](src/lib); there is no `bin/git-revamped`, `lib/state.sh` or `lib/core.sh`.
@@ -56,4 +56,3 @@ As of 2026-11-16:
 - The version is written by hand and released by `tests.yml`; there is no semantic-release, `package.json`, `release.yml` with `recover`, `bot-merge.yml` or Renovate.
 - CI is `tests.yml` and `security.yml`, not `ci.yml`, and no job starts with `step-security/harden-runner`.
 - No `.editorconfig`, `.yamllint.yml` or shfmt; the Makefile has `help`, `test`, `test-unit`, `coverage`, `lint` and `clean`, not the family's targets.
-- No test presses its keys through a real client attached from a second tmux.
