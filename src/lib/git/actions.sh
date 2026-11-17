@@ -48,13 +48,14 @@ _glab_browse() {
 }
 
 git_action_lazygit() {
-  local dir="${1}"
+  local dir="${1}" start
   is_git_repo "${dir}" || return 0
   has_command lazygit || return 0
+  start="$(_git_menu_label "${dir}")"
   if tmux_has_popup "$(_tmux_version)"; then
-    _tmux display-popup -d "${dir}" -E -w 90% -h 90% "lazygit"
+    _tmux display-popup -d "${start}" -E -w 90% -h 90% "lazygit"
   else
-    _tmux new-window -c "${dir}" "lazygit"
+    _tmux new-window -c "${start}" "lazygit"
   fi
 }
 

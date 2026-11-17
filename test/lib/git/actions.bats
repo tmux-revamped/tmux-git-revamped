@@ -12,6 +12,8 @@ setup() {
 }
 
 teardown() {
+  [[ -z "${GIT_TEST_SOCKET:-}" ]] || command tmux -S "${GIT_TEST_SOCKET}" kill-server 2>/dev/null || true
+  [[ -z "${GIT_TEST_SOCKET:-}" ]] || rm -f "${GIT_TEST_SOCKET}"
   cleanup_test_environment
 }
 
@@ -75,6 +77,47 @@ teardown() {
   git_action_lazygit /repo
   [[ "$(cat "${BATS_TEST_TMPDIR}/rec")" == *"display-popup"* ]]
   [[ "$(cat "${BATS_TEST_TMPDIR}/rec")" == *"lazygit"* ]]
+}
+
+@test "actions.sh - lazygit's window starts in a repository whose path holds a hash tmux reads as a format" {
+  # Arrange
+  local repo="${BATS_TEST_TMPDIR}/it's #S repo" stubs="${BATS_TEST_TMPDIR}/stubs" out="${BATS_TEST_TMPDIR}/where" real delay
+  GIT_TEST_SOCKET="/tmp/git-revamped-test-${BASHPID}-${RANDOM}"
+  mkdir -p "${repo}" "${stubs}" "${BATS_TEST_TMPDIR}/home"
+  real="$(cd "${repo}" && pwd -P)"
+  printf '#!/bin/sh\npwd -P >"%s"\n' "${out}" >"${stubs}/lazygit"
+  chmod +x "${stubs}/lazygit"
+  PATH="${stubs}:${PATH}"
+  HOME="${BATS_TEST_TMPDIR}/home" command tmux -S "${GIT_TEST_SOCKET}" -f /dev/null new-session -d -s test
+  command tmux -S "${GIT_TEST_SOCKET}" set-option -g default-shell /bin/sh
+  has_command() { return 0; }
+  _tmux_version() { echo "3.1"; }
+  _tmux() { command tmux -S "${GIT_TEST_SOCKET}" "$@"; }
+
+  # Act
+  git_action_lazygit "${repo}"
+
+  # Assert
+  for delay in 0.01 0.05 0.1 0.2 0.5 1 2 2; do
+    [[ -s "${out}" ]] && break
+    sleep "${delay}"
+  done
+  run cat "${out}"
+  [[ "${output}" == "${real}" ]]
+}
+
+@test "actions.sh - lazygit's popup gets its folder with every hash doubled" {
+  # Arrange
+  has_command() { return 0; }
+  _tmux_version() { echo "3.4"; }
+  _tmux() { _rec "$@"; }
+
+  # Act
+  git_action_lazygit "/re#Spo/a#b"
+
+  # Assert
+  run cat "${BATS_TEST_TMPDIR}/rec"
+  [[ "${output}" == "display-popup -d /re##Spo/a##b -E -w 90% -h 90% lazygit" ]]
 }
 
 @test "actions.sh - lazygit falls back to a new window below tmux 3.2" {
