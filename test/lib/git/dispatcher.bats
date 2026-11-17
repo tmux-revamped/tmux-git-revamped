@@ -336,7 +336,8 @@ teardown() {
 
 @test "git.sh dispatcher - doctor subcommand prints a capability report" {
   # Arrange
-  local expected_version="version: 2.0.0"
+  local expected_version
+  expected_version="version: $(sed -n 's/^## \[\([0-9][0-9.]*\)\].*/\1/p' "${BATS_TEST_DIRNAME}/../../../CHANGELOG.md" | head -n 1)"
 
   # Act
   run main doctor /repo
