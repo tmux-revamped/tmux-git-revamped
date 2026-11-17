@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-17
+
+### Fixed
+
+- lazygit opened in the wrong folder when the repository's path held a `#`
+  that tmux reads as a format, such as `#S`. The folder is now handed to
+  tmux with each `#` doubled.
+
 ## [2.0.0] - 2026-11-15
 
 ### Added
