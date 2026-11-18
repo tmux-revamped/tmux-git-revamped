@@ -1,5 +1,23 @@
 # Changelog
 
+# [3.0.0](https://github.com/tmux-revamped/tmux-git-revamped/compare/v2.0.1...v3.0.0) (2026-11-18)
+
+
+### Bug Fixes
+
+* say why a key cannot act ([eaaa60a](https://github.com/tmux-revamped/tmux-git-revamped/commit/eaaa60a985dea822d7fa55a23d616ab77c7d0a56))
+
+
+### Documentation
+
+* add the settings and value rules ([dd6e514](https://github.com/tmux-revamped/tmux-git-revamped/commit/dd6e514632760486447dadd1f02b766acea9e96e))
+
+
+### BREAKING CHANGES
+
+* decided on its own, apart from the alias rule, which
+is about names.
+
 ## [2.0.1] - 2026-11-17
 
 ### Fixed
