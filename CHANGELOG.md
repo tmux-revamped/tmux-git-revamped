@@ -104,7 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The provider calls ran in the status worker's working directory rather than
   the repository's, so `gh` and `glab` counted another repository or nothing at
   all. They now run inside the repository of the active pane.
-- A remote using an SSH host alias, such as `git@github-work:owner/repo.git`,
+- A remote using an SSH host alias, such as `git@github-work:tmux-revamped/tmux-git-revamped.git`,
   was not recognised as GitHub or GitLab, so its provider segment never ran.
   The alias is now resolved through `ssh -G`.
 - In options mode the pane list was split on a tab, which `read` treats as

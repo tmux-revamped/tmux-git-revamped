@@ -172,7 +172,7 @@ CI 狀態有專屬選項。`@git_revamped_ci_pass_color`、`@git_revamped_ci_fai
 
 `@git_revamped_web` 設為 `1` 後，狀態會加入開放的拉取請求、審閱請求、指派給你的 issue 以及目前分支的 CI 狀態。GitHub 經 `gh`，GitLab 經 `glab`，指令在當前窗格所在的儲存庫內執行。在 GitHub 上，帶有 `bug` 標籤的已指派 issue 會自成一個區段，不計入 issue 數目。GitHub 清單最多請求 1000 項，GitLab 清單最多讀取 10 頁、每頁 100 項。
 
-託管平台由 `remote.origin.url` 判斷。`git@github-work:owner/repo.git` 這類 SSH 主機別名會經 `ssh -G` 解析。在 GitHub 上，帳戶依次取：專案的 `user.email` 為 `583231+octocat@users.noreply.github.com` 這類 noreply 地址時其中的登入名稱，然後是儲存庫擁有者在 `@git_revamped_gh_accounts` 中的項目，最後是 `gh` 目前使用中的帳戶。權杖來自 `gh auth token --user <account>`，因此每個帳戶都必須已登入 `gh`。
+託管平台由 `remote.origin.url` 判斷。`git@github-work:tmux-revamped/tmux-git-revamped.git` 這類 SSH 主機別名會經 `ssh -G` 解析。在 GitHub 上，帳戶依次取：專案的 `user.email` 為 `583231+octocat@users.noreply.github.com` 這類 noreply 地址時其中的登入名稱，然後是儲存庫擁有者在 `@git_revamped_gh_accounts` 中的項目，最後是 `gh` 目前使用中的帳戶。權杖來自 `gh auth token --user <account>`，因此每個帳戶都必須已登入 `gh`。
 
 執行超過 10 秒的託管平台呼叫會被終止，畫面上保留上一次的數值。每次更新都會呼叫託管平台的 API，呼叫頻率由 `@git_revamped_web_interval` 決定。
 
@@ -346,6 +346,8 @@ graph LR
 | `make test` | [`test/`](test) 下的 bats 測試套件 |
 | `make lint` | 對所有 shell 檔案以 warning 級別執行 shellcheck |
 | `make coverage` | 在 Linux 上以 kcov 統計行覆蓋率，低於 95% 時失敗 |
+
+在 macOS 上，執行 `brew bundle` 會根據 [`Brewfile`](Brewfile) 安裝這些目標用到的所有工具。
 
 [`src/lib/git/git.sh`](src/lib/git/git.sh) 中的解析器和 [`src/lib/git/render.sh`](src/lib/git/render.sh) 中的渲染器是處理 git 輸出的純函數。git、`gh` 和 `glab` 呼叫都位於小型包裝函數之後，因此大部分測試既不需要儲存庫，亦不需要網絡。
 

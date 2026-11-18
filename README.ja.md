@@ -172,7 +172,7 @@ CIの状態には専用のオプションがあります。`@git_revamped_ci_pas
 
 `@git_revamped_web`を`1`にすると、オープンなプルリクエスト、レビュー依頼、自分に割り当てられたissue、現在のブランチのCIの状態がステータスに加わります。GitHubには`gh`、GitLabには`glab`を使い、コマンドはアクティブなペインのリポジトリ内で実行します。GitHubでは、`bug`ラベルの付いた割り当て済みissueは独立したセグメントになり、issueの件数からは除かれます。GitHubの一覧は最大1000件を要求し、GitLabの一覧は100件ずつ最大10ページを読みます。
 
-プロバイダーは`remote.origin.url`から判定します。`git@github-work:owner/repo.git`のようなSSHのホストエイリアスは`ssh -G`で解決します。GitHubのアカウントは、プロジェクトの`user.email`が`583231+octocat@users.noreply.github.com`のようなnoreplyアドレスならそのログイン名、次にリポジトリの所有者に対応する`@git_revamped_gh_accounts`のエントリ、最後に`gh`で有効なアカウントの順に決まります。トークンは`gh auth token --user <account>`から取得するので、すべてのアカウントが`gh`にログインしている必要があります。
+プロバイダーは`remote.origin.url`から判定します。`git@github-work:tmux-revamped/tmux-git-revamped.git`のようなSSHのホストエイリアスは`ssh -G`で解決します。GitHubのアカウントは、プロジェクトの`user.email`が`583231+octocat@users.noreply.github.com`のようなnoreplyアドレスならそのログイン名、次にリポジトリの所有者に対応する`@git_revamped_gh_accounts`のエントリ、最後に`gh`で有効なアカウントの順に決まります。トークンは`gh auth token --user <account>`から取得するので、すべてのアカウントが`gh`にログインしている必要があります。
 
 10秒を超えたプロバイダーの呼び出しは停止され、最後の値が表示されたまま残ります。更新のたびにプロバイダーのAPIを呼ぶので、その頻度は`@git_revamped_web_interval`で決まります。
 
@@ -346,6 +346,8 @@ graph LR
 | `make test` | [`test/`](test)以下のbatsスイート |
 | `make lint` | すべてのシェルファイルに対するwarningレベルのshellcheck |
 | `make coverage` | Linuxでのkcovによる行カバレッジ。95%を下回ると失敗します |
+
+macOS では、`brew bundle` を実行すると、これらのターゲットが使うツールがすべて [`Brewfile`](Brewfile) からインストールされます。
 
 [`src/lib/git/git.sh`](src/lib/git/git.sh)のパーサーと[`src/lib/git/render.sh`](src/lib/git/render.sh)のレンダラーは、gitの出力を受け取る純粋関数です。git、`gh`、`glab`の呼び出しは小さなラッパーの裏にあるので、ほとんどのテストはリポジトリもネットワークも必要としません。
 

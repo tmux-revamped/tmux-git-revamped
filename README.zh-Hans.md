@@ -172,7 +172,7 @@ CI 状态有自己的选项。`@git_revamped_ci_pass_color`、`@git_revamped_ci_
 
 `@git_revamped_web` 设为 `1` 后，状态会加入开放的拉取请求、评审请求、分配给你的 issue 以及当前分支的 CI 状态。GitHub 通过 `gh`，GitLab 通过 `glab`，命令在活动窗格所在的仓库中运行。在 GitHub 上，带有 `bug` 标签的已分配 issue 单独成为一个片段，不计入 issue 数。GitHub 列表最多请求 1000 项，GitLab 列表最多读取 10 页、每页 100 项。
 
-托管平台从 `remote.origin.url` 判断。`git@github-work:owner/repo.git` 这样的 SSH 主机别名通过 `ssh -G` 解析。在 GitHub 上，账号依次取：项目的 `user.email` 为 `583231+octocat@users.noreply.github.com` 这类 noreply 地址时其中的登录名，然后是仓库所有者在 `@git_revamped_gh_accounts` 中的条目，最后是 `gh` 当前的活动账号。令牌来自 `gh auth token --user <account>`，因此每个账号都必须已登录 `gh`。
+托管平台从 `remote.origin.url` 判断。`git@github-work:tmux-revamped/tmux-git-revamped.git` 这样的 SSH 主机别名通过 `ssh -G` 解析。在 GitHub 上，账号依次取：项目的 `user.email` 为 `583231+octocat@users.noreply.github.com` 这类 noreply 地址时其中的登录名，然后是仓库所有者在 `@git_revamped_gh_accounts` 中的条目，最后是 `gh` 当前的活动账号。令牌来自 `gh auth token --user <account>`，因此每个账号都必须已登录 `gh`。
 
 运行超过 10 秒的托管平台调用会被终止，屏幕上保留上一次的值。每次刷新都会调用托管平台的 API，调用频率由 `@git_revamped_web_interval` 决定。
 
@@ -346,6 +346,8 @@ graph LR
 | `make test` | [`test/`](test) 下的 bats 测试套件 |
 | `make lint` | 对所有 shell 文件以 warning 级别运行 shellcheck |
 | `make coverage` | 在 Linux 上用 kcov 统计行覆盖率，低于 95% 时失败 |
+
+在 macOS 上，运行 `brew bundle` 会根据 [`Brewfile`](Brewfile) 安装这些目标用到的所有工具。
 
 [`src/lib/git/git.sh`](src/lib/git/git.sh) 中的解析器和 [`src/lib/git/render.sh`](src/lib/git/render.sh) 中的渲染器是处理 git 输出的纯函数。git、`gh` 和 `glab` 调用都位于小型包装函数之后，因此大多数测试既不需要仓库，也不需要网络。
 

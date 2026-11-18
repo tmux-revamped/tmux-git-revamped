@@ -172,7 +172,7 @@ The CI status has its own options. `@git_revamped_ci_pass_color`, `@git_revamped
 
 With `@git_revamped_web` set to `1`, the status adds open pull requests, review requests, issues assigned to you and the CI status of the current branch. GitHub goes through `gh`, GitLab through `glab`, and the commands run inside the repository of the active pane. On GitHub, assigned issues labeled `bug` form their own segment and leave the issue count. GitHub lists ask for up to 1000 items, and GitLab lists read up to 10 pages of 100.
 
-The provider is read from `remote.origin.url`. An SSH host alias such as `git@github-work:owner/repo.git` is resolved through `ssh -G`. On GitHub, the account is the login in the project's `user.email` when it is a noreply address such as `583231+octocat@users.noreply.github.com`, then the `@git_revamped_gh_accounts` entry for the repository owner, then the active `gh` account. The token comes from `gh auth token --user <account>`, so every account must be logged in to `gh`.
+The provider is read from `remote.origin.url`. An SSH host alias such as `git@github-work:tmux-revamped/tmux-git-revamped.git` is resolved through `ssh -G`. On GitHub, the account is the login in the project's `user.email` when it is a noreply address such as `583231+octocat@users.noreply.github.com`, then the `@git_revamped_gh_accounts` entry for the repository owner, then the active `gh` account. The token comes from `gh auth token --user <account>`, so every account must be logged in to `gh`.
 
 A provider call that runs longer than 10 seconds is stopped, and the last value stays on screen. Each refresh calls the provider API, so `@git_revamped_web_interval` sets how often that happens.
 
@@ -346,6 +346,8 @@ Branch, tag and upstream names have every `#` doubled before they reach the stat
 | `make test` | the bats suite under [`test/`](test) |
 | `make lint` | shellcheck at warning severity on every shell file |
 | `make coverage` | kcov line coverage on Linux, failing below 95% |
+
+On macOS, `brew bundle` installs every tool these targets call, from the [`Brewfile`](Brewfile).
 
 The parsers in [`src/lib/git/git.sh`](src/lib/git/git.sh) and the renderers in [`src/lib/git/render.sh`](src/lib/git/render.sh) are pure functions over git output. The git, `gh` and `glab` calls sit behind small wrappers, so most tests need no repository and no network.
 
