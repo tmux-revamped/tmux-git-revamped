@@ -71,9 +71,9 @@ repository() {
   REPO="${BATS_TEST_TMPDIR}/repo"
   mkdir -p "${REPO}"
   git -C "${REPO}" init -q -b main
-  git -C "${REPO}" -c user.name=Octocat -c user.email=octocat@example.invalid commit -q --allow-empty -m first
+  git -C "${REPO}" -c user.name=Octocat -c user.email= commit -q --allow-empty -m first
   git -C "${REPO}" branch feature
-  git -C "${REPO}" remote add origin https://github.com/octocat/hello.git
+  git -C "${REPO}" remote add origin https://github.com/octocat/Hello-World.git
   REPO="$(cd "${REPO}" && pwd -P)"
 }
 

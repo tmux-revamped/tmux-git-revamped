@@ -165,9 +165,9 @@ teardown() {
 }
 
 @test "git.sh - provider_from_url recognizes hosts" {
-  [[ "$(provider_from_url 'https://github.com/o/r')" == "github" ]]
-  [[ "$(provider_from_url 'git@gitlab.com:o/r.git')" == "gitlab" ]]
-  [[ -z "$(provider_from_url 'https://bitbucket.org/o/r')" ]]
+  [[ "$(provider_from_url 'https://github.com/tmux-revamped/tmux-git-revamped')" == "github" ]]
+  [[ "$(provider_from_url 'git@gitlab.com:gitlab-org/gitlab.git')" == "gitlab" ]]
+  [[ -z "$(provider_from_url 'https://bitbucket.org/tutorials/markdowndemo')" ]]
 }
 
 @test "git.sh - is_git_repo is false for a non-repo path" {
@@ -217,46 +217,46 @@ teardown() {
 
 @test "git.sh lib - login drops the numeric id of a noreply email" {
   # Arrange
-  local email="583231+acme-ci@users.noreply.github.com"
+  local email="583231+octocat@users.noreply.github.com"
 
   # Act
   run gh_login_from_email "${email}"
 
   # Assert
-  [ "${output}" = "acme-ci" ]
+  [ "${output}" = "octocat" ]
 }
 
 @test "git.sh lib - a regular email names no login" {
-  run gh_login_from_email "someone@example.com"
+  run gh_login_from_email "noreply@github.com"
 
   [ -z "${output}" ]
 }
 
 @test "git.sh lib - owner comes from an scp-like url" {
   # Arrange
-  local url="git@github-acme:acme-corp/acme_app.git"
+  local url="git@github-work:tmux-revamped/tmux-git-revamped.git"
 
   # Act
   run owner_from_url "${url}"
 
   # Assert
-  [ "${output}" = "acme-corp" ]
+  [ "${output}" = "tmux-revamped" ]
 }
 
 @test "git.sh lib - host comes from an scp-like url" {
   # Arrange
-  local url="git@github-acme:acme-corp/acme_app.git"
+  local url="git@github-work:tmux-revamped/tmux-git-revamped.git"
 
   # Act
   run host_from_url "${url}"
 
   # Assert
-  [ "${output}" = "github-acme" ]
+  [ "${output}" = "github-work" ]
 }
 
 @test "git.sh lib - owner comes from an https url" {
   # Arrange
-  local url="https://github.com/octocat/hello-world.git"
+  local url="https://github.com/octocat/Hello-World.git"
 
   # Act
   run owner_from_url "${url}"
@@ -267,7 +267,7 @@ teardown() {
 
 @test "git.sh lib - host comes from an https url" {
   # Arrange
-  local url="https://github.com/octocat/hello-world.git"
+  local url="https://github.com/octocat/Hello-World.git"
 
   # Act
   run host_from_url "${url}"
@@ -278,18 +278,18 @@ teardown() {
 
 @test "git.sh lib - owner comes from an ssh url" {
   # Arrange
-  local url="ssh://git@github.com/AcmeLabs/api.git"
+  local url="ssh://git@github.com/BurntSushi/ripgrep.git"
 
   # Act
   run owner_from_url "${url}"
 
   # Assert
-  [ "${output}" = "AcmeLabs" ]
+  [ "${output}" = "BurntSushi" ]
 }
 
 @test "git.sh lib - host comes from an ssh url" {
   # Arrange
-  local url="ssh://git@github.com/AcmeLabs/api.git"
+  local url="ssh://git@github.com/BurntSushi/ripgrep.git"
 
   # Act
   run host_from_url "${url}"
@@ -334,7 +334,7 @@ teardown() {
 @test "git.sh lib - a provider host needs no alias lookup" {
   _ssh_hostname() { echo "should-not-be-asked"; }
 
-  run git_provider "git@gitlab.com:o/r.git"
+  run git_provider "git@gitlab.com:gitlab-org/gitlab.git"
 
   [[ "${output}" == "gitlab" ]]
 }
@@ -342,7 +342,7 @@ teardown() {
 @test "git.sh lib - an unknown host names no provider" {
   _ssh_hostname() { echo "192.168.0.2"; }
 
-  run git_provider "git@nas:o/r.git"
+  run git_provider "git@nas:tmux-revamped/tmux-git-revamped.git"
 
   [ -z "${output}" ]
 }

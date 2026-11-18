@@ -23,7 +23,7 @@ make_repo() {
   local dir="${1}"
   mkdir -p "${dir}"
   git -C "${dir}" init -q -b trunk
-  git -C "${dir}" -c user.name=t -c user.email=t@example.invalid commit -q --allow-empty -m init
+  git -C "${dir}" -c user.name=t -c user.email= commit -q --allow-empty -m init
 }
 
 @test "entrypoint - the status job quotes the pane path" {

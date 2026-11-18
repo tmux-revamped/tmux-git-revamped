@@ -225,7 +225,7 @@ teardown() {
 }
 
 @test "actions.sh - browse opens github through gh" {
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   has_command() { [[ "$1" == "gh" ]]; }
   _gh_browse() { _rec "gh" "$1"; }
   git_action_browse /repo
@@ -233,7 +233,7 @@ teardown() {
 }
 
 @test "actions.sh - browse opens gitlab through glab" {
-  _git_remote_url() { echo "git@gitlab.com:o/r.git"; }
+  _git_remote_url() { echo "git@gitlab.com:gitlab-org/gitlab.git"; }
   has_command() { [[ "$1" == "glab" ]]; }
   _glab_browse() { _rec "glab" "$1"; }
   git_action_browse /repo
@@ -242,7 +242,7 @@ teardown() {
 
 @test "actions.sh - browse says so for a remote that is neither GitHub nor GitLab" {
   # Arrange
-  _git_remote_url() { echo "https://example.com/o/r"; }
+  _git_remote_url() { echo "https://codeberg.org/forgejo/forgejo"; }
   has_command() { return 0; }
   _gh_browse() { _rec gh; }
   _glab_browse() { _rec glab; }
@@ -271,13 +271,13 @@ teardown() {
 @test "actions.sh - browse names the provider tool that is not installed" {
   # Arrange
   local first
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   has_command() { return 1; }
   _tmux() { _rec "$@"; }
   git_action_browse /repo
   first="$(<"${BATS_TEST_TMPDIR}/rec")"
   : >"${BATS_TEST_TMPDIR}/rec"
-  _git_remote_url() { echo "git@gitlab.com:o/r.git"; }
+  _git_remote_url() { echo "git@gitlab.com:gitlab-org/gitlab.git"; }
 
   # Act
   git_action_browse /repo
@@ -290,7 +290,7 @@ teardown() {
 @test "actions.sh - browse says so when the provider tool fails, and still succeeds so the key shows no raw error" {
   # Arrange
   local first
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   has_command() { return 0; }
   _gh_browse() { return 4; }
   _glab_browse() { return 1; }
@@ -298,7 +298,7 @@ teardown() {
   git_action_browse /repo
   first="$(<"${BATS_TEST_TMPDIR}/rec")"
   : >"${BATS_TEST_TMPDIR}/rec"
-  _git_remote_url() { echo "git@gitlab.com:o/r.git"; }
+  _git_remote_url() { echo "git@gitlab.com:gitlab-org/gitlab.git"; }
 
   # Act
   run git_action_browse /repo
@@ -318,7 +318,7 @@ teardown() {
 
 @test "actions.sh - git_doctor reports a repo with a provider" {
   is_git_repo() { return 0; }
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   _tmux_version() { echo "3.4"; }
   run git_doctor /repo
   [[ "${output}" == *"tmux-git-revamped doctor"* ]]

@@ -151,7 +151,7 @@ teardown() {
 
 @test "git.sh dispatcher - web segment adds provider counts when enabled" {
   set_tmux_option "@git_revamped_web" "1"
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   has_command() { [[ "$1" == "gh" ]]; }
   _gh_pr_count() { echo "2"; }
   _gh_review_count() { echo "1"; }
@@ -167,7 +167,7 @@ teardown() {
 
 @test "git.sh dispatcher - github issue count never goes negative" {
   set_tmux_option "@git_revamped_web" "1"
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   has_command() { [[ "$1" == "gh" ]]; }
   _gh_pr_count() { echo "0"; }
   _gh_review_count() { echo "0"; }
@@ -180,13 +180,13 @@ teardown() {
 }
 
 @test "git.sh dispatcher - web segment is empty for an unknown provider" {
-  _git_remote_url() { echo "https://example.com/o/r"; }
+  _git_remote_url() { echo "https://codeberg.org/forgejo/forgejo"; }
   run git_web_segment /repo
   [[ -z "${output}" ]]
 }
 
 @test "git.sh dispatcher - web segment supports gitlab" {
-  _git_remote_url() { echo "git@gitlab.com:o/r.git"; }
+  _git_remote_url() { echo "git@gitlab.com:gitlab-org/gitlab.git"; }
   has_command() { [[ "$1" == "glab" ]]; }
   _glab_mr_count() { echo "5"; }
   _glab_review_count() { echo "2"; }
@@ -201,7 +201,7 @@ teardown() {
 
 @test "git.sh dispatcher - CI status renders in the web path for github" {
   set_tmux_option "@git_revamped_web" "1"
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   has_command() { [[ "$1" == "gh" ]]; }
   _gh_pr_count() { echo "0"; }
   _gh_review_count() { echo "0"; }
@@ -213,7 +213,7 @@ teardown() {
 }
 
 @test "git.sh dispatcher - CI status renders in the web path for gitlab" {
-  _git_remote_url() { echo "git@gitlab.com:o/r.git"; }
+  _git_remote_url() { echo "git@gitlab.com:gitlab-org/gitlab.git"; }
   has_command() { [[ "$1" == "glab" ]]; }
   _glab_mr_count() { echo "0"; }
   _glab_review_count() { echo "0"; }
@@ -225,7 +225,7 @@ teardown() {
 
 @test "git.sh dispatcher - CI status can be disabled inside the web path" {
   set_tmux_option "@git_revamped_ci" "0"
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   has_command() { [[ "$1" == "gh" ]]; }
   _gh_pr_count() { echo "0"; }
   _gh_review_count() { echo "0"; }
@@ -327,7 +327,7 @@ teardown() {
 }
 
 @test "git.sh dispatcher - browse subcommand drives the provider opener" {
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   has_command() { [[ "$1" == "gh" ]]; }
   _gh_browse() { echo "$1" >> "${BATS_TEST_TMPDIR}/browse"; }
   run main browse /repo
@@ -337,7 +337,7 @@ teardown() {
 @test "git.sh dispatcher - doctor subcommand prints a capability report" {
   # Arrange
   local expected_version
-  expected_version="version: $(sed -n 's/^## \[\([0-9][0-9.]*\)\].*/\1/p' "${BATS_TEST_DIRNAME}/../../../CHANGELOG.md" | head -n 1)"
+  expected_version="version: $(sed -n 's/^##* \[\([0-9][0-9.]*\)\].*/\1/p' "${BATS_TEST_DIRNAME}/../../../CHANGELOG.md" | head -n 1)"
 
   # Act
   run main doctor /repo
@@ -438,7 +438,7 @@ wait_for_path() {
 }
 
 @test "git.sh dispatcher - provider calls run inside the repository" {
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   has_command() { [[ "$1" == "gh" ]]; }
   _gh_pr_count() { pwd -P; }
   _gh_review_count() { echo "0"; }
@@ -455,7 +455,7 @@ wait_for_path() {
 }
 
 @test "git.sh dispatcher - provider segment is empty when the directory is gone" {
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   _git_web_counts() { echo "should-not-run"; }
 
   run git_web_segment "${BATS_TEST_TMPDIR}/absent"
@@ -466,9 +466,9 @@ wait_for_path() {
 
 @test "git.sh dispatcher - gh uses the account named by the project email" {
   # Arrange
-  _git_remote_url() { echo "git@github-acme:acme-corp/r.git"; }
+  _git_remote_url() { echo "git@github-work:tmux-revamped/tmux-git-revamped.git"; }
   _ssh_hostname() { echo "github.com"; }
-  _git_user_email() { echo "583231+acme-ci@users.noreply.github.com"; }
+  _git_user_email() { echo "583231+octocat@users.noreply.github.com"; }
   _gh_token_for() { echo "token-for-${1}"; }
   _git_web_counts() { echo "token=${GH_TOKEN:-none}"; }
 
@@ -476,14 +476,14 @@ wait_for_path() {
   run git_web_segment "${BATS_TEST_TMPDIR}"
 
   # Assert
-  [[ "${output}" == "token=token-for-acme-ci" ]]
+  [[ "${output}" == "token=token-for-octocat" ]]
 }
 
 @test "git.sh dispatcher - gh falls back to the owner map without a noreply email" {
   # Arrange
-  set_tmux_option "@git_revamped_gh_accounts" "acme-corp=acme-bot octocat=octocat"
-  _git_remote_url() { echo "https://github.com/acme-corp/r"; }
-  _git_user_email() { echo "someone@example.com"; }
+  set_tmux_option "@git_revamped_gh_accounts" "tmux-plugins=ghost tmux-revamped=octocat"
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
+  _git_user_email() { echo "noreply@github.com"; }
   _gh_token_for() { echo "token-for-${1}"; }
   _git_web_counts() { echo "token=${GH_TOKEN:-none}"; }
 
@@ -491,12 +491,12 @@ wait_for_path() {
   run git_web_segment "${BATS_TEST_TMPDIR}"
 
   # Assert
-  [[ "${output}" == "token=token-for-acme-bot" ]]
+  [[ "${output}" == "token=token-for-octocat" ]]
 }
 
 @test "git.sh dispatcher - gh keeps the active account when nothing names one" {
   unset GH_TOKEN
-  _git_remote_url() { echo "https://github.com/someone/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-plugins/tpm"; }
   _git_web_counts() { echo "token=${GH_TOKEN:-none}"; }
 
   run git_web_segment "${BATS_TEST_TMPDIR}"
@@ -506,7 +506,7 @@ wait_for_path() {
 
 @test "git.sh dispatcher - an account without a token keeps the active account" {
   unset GH_TOKEN
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   _git_user_email() { echo "ghost@users.noreply.github.com"; }
   _git_web_counts() { echo "token=${GH_TOKEN:-none}"; }
 
@@ -517,8 +517,8 @@ wait_for_path() {
 
 @test "git.sh dispatcher - a host alias resolves to its provider" {
   # Arrange
-  _git_remote_url() { echo "git@github-acmelabs:AcmeLabs/api.git"; }
-  _ssh_hostname() { [[ "${1}" == "github-acmelabs" ]] && echo "github.com"; }
+  _git_remote_url() { echo "git@github-work:tmux-revamped/tmux-git-revamped.git"; }
+  _ssh_hostname() { [[ "${1}" == "github-work" ]] && echo "github.com"; }
   _git_web_counts() { echo "provider=${2}"; }
 
   # Act
@@ -531,7 +531,7 @@ wait_for_path() {
 @test "git.sh dispatcher - zero provider counts can be hidden" {
   set_tmux_option "@git_revamped_web_zero" "0"
   set_tmux_option "@git_revamped_ci" "0"
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   has_command() { [[ "$1" == "gh" ]]; }
   _gh_pr_count() { echo "2"; }
   _gh_review_count() { echo "0"; }
@@ -545,7 +545,7 @@ wait_for_path() {
 
 @test "git.sh dispatcher - zero provider counts show by default" {
   set_tmux_option "@git_revamped_ci" "0"
-  _git_remote_url() { echo "https://github.com/o/r"; }
+  _git_remote_url() { echo "https://github.com/tmux-revamped/tmux-git-revamped"; }
   has_command() { [[ "$1" == "gh" ]]; }
   _gh_pr_count() { echo "0"; }
   _gh_review_count() { echo "0"; }
