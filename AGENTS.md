@@ -41,7 +41,7 @@ Guidance for anyone, human or agent, changing tmux-git-revamped. What it is and 
 
 ## Gaps against FAMILY.md
 
-As of 2026-11-17:
+As of 2026-11-19:
 
 - Every script is bash, under `#!/usr/bin/env bash`, not POSIX `sh`, so it is untested under `dash`, `zsh` and BusyBox `sh`.
 - The code lives in [`src/`](src) and [`src/lib/`](src/lib); there is no `bin/git-revamped`, `lib/state.sh` or `lib/core.sh`.
@@ -56,3 +56,4 @@ As of 2026-11-17:
 - CI is `tests.yml` and `security.yml`, not `ci.yml`, and no job starts with `step-security/harden-runner`.
 - No `.editorconfig`, `.yamllint.yml` or shfmt; the Makefile has `help`, `test`, `test-unit`, `coverage`, `lint` and `clean`, not the family's targets.
 - `get_tmux_option` keeps a tmux option set to nothing as an empty value, where FAMILY.md has it mean the default; the ticker's own reader already takes the default.
+- The status jobs carry the checkout path with each `#` doubled but not each `%`, so a path holding `%` reaches the job as a time format; the POSIX rewrite doubles both, as FAMILY.md says under Output.
